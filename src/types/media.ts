@@ -1,15 +1,14 @@
-import { MediaCategory } from "./library";
+import type { MediaCategory } from "./library";
 
 export interface MediaItem {
   id: string;
   title: string;
   category: MediaCategory;
-  badge: string;
-  badgeStyle: string;
   format: string;
   studio: string;
-  year: string;
-  rating: string;
+  startYear: number;
+  endYear: number | null; // null for ongoing or single-year
+  rating: number;
   genres: string[];
   poster: string;
   synopsis: string;

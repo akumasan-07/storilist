@@ -11,18 +11,19 @@ import {
   Clock,
   Bookmark,
   Ban,
-  Sparkles,
-  RotateCcw,
   Trash2,
 } from "lucide-react";
-import { LibraryEntry, LibraryStatus, MediaCategory } from "@/types/library";
+import { LibraryEntry, LibraryItem, LibraryStatus } from "@/types/library";
+import { CATEGORY_META } from "@/lib/media";
+import { getProgressPercent } from "@/lib/library";
 
 interface EditLogModalProps {
-  entry: LibraryEntry | null;
+  item?: LibraryItem | null;
+  entry?: LibraryItem | null;
   isOpen: boolean;
   onClose: () => void;
   onSave: (updatedEntry: LibraryEntry) => void;
-  onRemove: (entryId: string) => void;
+  onRemove: (mediaId: string) => void;
 }
 
 const STATUS_OPTIONS: { status: LibraryStatus; label: string; icon: typeof Clock; activeClass: string }[] = [
@@ -54,96 +55,72 @@ const STATUS_OPTIONS: { status: LibraryStatus; label: string; icon: typeof Clock
 
 const RATING_VALUES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-const CATEGORY_STYLES: Record<MediaCategory, { badge: string; style: string }> = {
-  Anime: { badge: "ANIME", style: "border-accent-anime/40 bg-accent-anime/15 text-accent-anime" },
-  Comics: { badge: "COMIC", style: "border-accent-comic/40 bg-accent-comic/15 text-accent-comic" },
-  Movies: { badge: "MOVIE", style: "border-accent-movie/40 bg-accent-movie/15 text-accent-movie" },
-  Series: { badge: "SERIES", style: "border-accent-series/40 bg-accent-series/15 text-accent-series" },
-  Novels: { badge: "NOVEL", style: "border-accent-novel/40 bg-accent-novel/15 text-accent-novel" },
-};
+interface EditLogModalDialogProps {
+  target: LibraryItem;
+  onClose: () => void;
+  onSave: (updatedEntry: LibraryEntry) => void;
+  onRemove: (mediaId: string) => void;
+}
 
-export default function EditLogModal({
-  entry,
-  isOpen,
+function EditLogModalDialog({
+  target,
   onClose,
   onSave,
   onRemove,
-}: EditLogModalProps) {
-  const [status, setStatus] = useState<LibraryStatus>("In Progress");
-  const [currentProgress, setCurrentProgress] = useState(0);
-  const [userRating, setUserRating] = useState<number | null>(null);
-  const [notes, setNotes] = useState("");
+}: EditLogModalDialogProps) {
+  const [status, setStatus] = useState<LibraryStatus>(() =>
+    target.status === "Dropped"
+      ? "Dropped"
+      : target.currentProgress === 0
+        ? "Planned"
+        : target.status
+  );
+  const [currentProgress, setCurrentProgress] = useState(target.currentProgress);
+  const [userRating, setUserRating] = useState<number | null>(target.userRating);
+  const [notes, setNotes] = useState(target.notes || "");
   const [isConfirmingRemove, setIsConfirmingRemove] = useState(false);
 
   useEffect(() => {
-    if (entry) {
-      const initialStatus =
-        entry.status === "Dropped"
-          ? "Dropped"
-          : entry.currentProgress === 0
-            ? "Planned"
-            : entry.status;
-      setStatus(initialStatus);
-      setCurrentProgress(entry.currentProgress);
-      setUserRating(entry.userRating);
-      setNotes(entry.notes || "");
-      setIsConfirmingRemove(false);
-    }
-  }, [entry, isOpen]);
-
-  useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape" && isOpen) {
+      if (e.key === "Escape") {
         onClose();
       }
     }
-    if (isOpen) {
-      document.addEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "hidden";
-    }
+    document.addEventListener("keydown", handleKeyDown);
+    document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "";
     };
-  }, [isOpen, onClose]);
+  }, [onClose]);
 
-  if (!isOpen || !entry) return null;
-
-  const categoryStyle = CATEGORY_STYLES[entry.category];
-  const isCompleted = status === "Completed";
-  const hasTotal = entry.totalProgress !== null;
+  const { media } = target;
+  const categoryStyle = CATEGORY_META[media.category];
+  const hasTotal = media.totalProgress !== null;
 
   const updateProgress = (nextProgress: number) => {
     let clampedProgress = nextProgress;
     if (clampedProgress < 0) clampedProgress = 0;
-    if (entry.totalProgress !== null && clampedProgress > entry.totalProgress) {
-      clampedProgress = entry.totalProgress;
+    if (media.totalProgress !== null && clampedProgress > media.totalProgress) {
+      clampedProgress = media.totalProgress;
     }
 
     setCurrentProgress(clampedProgress);
 
     // Apply automatic transitions specifically when progress is changed
     setStatus((prevStatus) => {
-      // Once an item is Dropped, it remains Dropped regardless of progress changes
       if (prevStatus === "Dropped") {
         return "Dropped";
       }
 
-      const hasTotal = entry.totalProgress !== null;
-
-      // When progress reaches 0, switch to Planned from other statuses
       if (clampedProgress === 0) {
         return "Planned";
       }
 
-      // When progress reaches the known total, switch to Completed
-      if (hasTotal && clampedProgress >= entry.totalProgress!) {
+      if (media.totalProgress !== null && clampedProgress >= media.totalProgress) {
         return "Completed";
       }
 
-      // When progress is > 0 and below known total (or ongoing):
-      // - Planned with progress > 0 switches to In Progress
-      // - Completed with progress reduced below total switches to In Progress
       if (prevStatus === "Planned" || prevStatus === "Completed") {
         return "In Progress";
       }
@@ -158,9 +135,8 @@ export default function EditLogModal({
 
   const handleStatusChange = (newStatus: LibraryStatus) => {
     setStatus(newStatus);
-    // Auto-adjust progress if moving to Completed with known total
-    if (newStatus === "Completed" && entry.totalProgress !== null) {
-      setCurrentProgress(entry.totalProgress);
+    if (newStatus === "Completed" && media.totalProgress !== null) {
+      setCurrentProgress(media.totalProgress);
     } else if (newStatus === "Planned") {
       setCurrentProgress(0);
     } else if (newStatus === "In Progress" && currentProgress === 0) {
@@ -187,8 +163,7 @@ export default function EditLogModal({
   };
 
   const handleConfirmRemove = () => {
-    if (!entry) return;
-    onRemove(entry.id);
+    onRemove(target.mediaId);
     setIsConfirmingRemove(false);
     onClose();
   };
@@ -202,12 +177,13 @@ export default function EditLogModal({
           ? "Planned"
           : status;
     onSave({
-      ...entry,
+      mediaId: target.mediaId,
       status: finalStatus,
       currentProgress,
       userRating,
       notes: notes.trim() || undefined,
       lastUpdated: new Date().toISOString(),
+      addedAt: target.addedAt,
     });
     onClose();
   };
@@ -233,8 +209,8 @@ export default function EditLogModal({
           <div className="flex items-center gap-3.5">
             <div className="relative aspect-[2/3] w-12 shrink-0 overflow-hidden rounded-lg bg-muted shadow-sm">
               <Image
-                src={entry.poster}
-                alt={entry.title}
+                src={media.poster}
+                alt={media.title}
                 fill
                 sizes="48px"
                 className="object-cover"
@@ -248,11 +224,11 @@ export default function EditLogModal({
                   {categoryStyle.badge}
                 </span>
                 <span className="text-xs text-subtle-foreground">
-                  {entry.studio} &bull; {entry.format}
+                  {media.studio} &bull; {media.format}
                 </span>
               </div>
               <h2 id="edit-log-title" className="text-base font-bold text-foreground line-clamp-1">
-                {entry.title}
+                {media.title}
               </h2>
             </div>
           </div>
@@ -300,13 +276,13 @@ export default function EditLogModal({
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="text-xs font-semibold text-foreground">
-                Progress ({entry.progressUnit})
+                Progress ({media.progressUnit})
               </label>
               <div className="text-xs font-medium text-muted-foreground">
                 {hasTotal ? (
                   <span>
-                    {currentProgress} / {entry.totalProgress} (
-                    {Math.round((currentProgress / (entry.totalProgress || 1)) * 100)}%)
+                    {currentProgress} / {media.totalProgress} (
+                    {getProgressPercent(currentProgress, media.totalProgress)}%)
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 text-primary-subtle-foreground font-semibold">
@@ -332,7 +308,7 @@ export default function EditLogModal({
                 <input
                   type="number"
                   min={0}
-                  max={entry.totalProgress ?? undefined}
+                  max={media.totalProgress ?? undefined}
                   value={currentProgress}
                   onChange={handleProgressInputChange}
                   aria-label="Current progress unit"
@@ -343,7 +319,7 @@ export default function EditLogModal({
               <button
                 type="button"
                 onClick={() => handleStepProgress(1)}
-                disabled={hasTotal && currentProgress >= (entry.totalProgress || 0)}
+                disabled={hasTotal && currentProgress >= (media.totalProgress || 0)}
                 aria-label="Increase progress by 1"
                 className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-foreground transition-colors hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
@@ -353,8 +329,8 @@ export default function EditLogModal({
               {hasTotal && (
                 <button
                   type="button"
-                  onClick={() => updateProgress(entry.totalProgress || 0)}
-                  disabled={currentProgress === entry.totalProgress}
+                  onClick={() => updateProgress(media.totalProgress || 0)}
+                  disabled={currentProgress === media.totalProgress}
                   className="rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   title="Set to max completed"
                 >
@@ -436,7 +412,7 @@ export default function EditLogModal({
                 <button
                   type="button"
                   onClick={() => setIsConfirmingRemove(true)}
-                  aria-label={`Remove ${entry.title} from library`}
+                  aria-label={`Remove ${media.title} from library`}
                   className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-rose-500/25 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 hover:border-rose-500/40 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-500"
                 >
                   <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
@@ -448,7 +424,7 @@ export default function EditLogModal({
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div>
                     <p className="text-xs font-bold text-rose-600 dark:text-rose-400">
-                      Remove &ldquo;{entry.title}&rdquo; from your library?
+                      Remove &ldquo;{media.title}&rdquo; from your library?
                     </p>
                     <p className="text-[11px] text-muted-foreground mt-0.5">
                       This will remove your tracking entry. The title will remain available in Discover.
@@ -495,5 +471,20 @@ export default function EditLogModal({
         </form>
       </div>
     </div>
+  );
+}
+
+export default function EditLogModal(props: EditLogModalProps) {
+  const target = props.item || props.entry;
+  if (!props.isOpen || !target) return null;
+
+  return (
+    <EditLogModalDialog
+      key={`${target.mediaId}-${target.lastUpdated}`}
+      target={target}
+      onClose={props.onClose}
+      onSave={props.onSave}
+      onRemove={props.onRemove}
+    />
   );
 }
