@@ -53,7 +53,7 @@ export function TitleLibraryLink({ mediaId }: { mediaId: string }) {
   return (
     <Link
       href="/library"
-      className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline transition-colors"
+      className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline transition-colors py-1"
     >
       <Library className="h-3.5 w-3.5" aria-hidden="true" />
       <span>View in My Library</span>
@@ -91,11 +91,11 @@ export default function TitleInteractive({ media }: TitleInteractiveProps) {
 
   return (
     <>
-      <div className="mt-6 rounded-2xl border border-border-subtle bg-muted/30 p-4">
+      <div className="mt-6 rounded-2xl border border-border-subtle bg-muted/30 p-3.5 sm:p-4">
         {isTracked ? (
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
                 <span
                   className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold shadow-2xs ${
                     STATUS_CONFIG[trackedEntry.status].badgeStyle
@@ -130,17 +130,17 @@ export default function TitleInteractive({ media }: TitleInteractiveProps) {
               </div>
 
               {trackedEntry.notes && (
-                <p className="mt-1.5 text-xs text-muted-foreground italic line-clamp-1">
+                <p className="mt-1.5 text-xs text-muted-foreground italic line-clamp-2 sm:line-clamp-1">
                   &ldquo;{trackedEntry.notes}&rdquo;
                 </p>
               )}
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
               <button
                 type="button"
                 onClick={() => setIsLogModalOpen(true)}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-2 text-xs font-semibold text-foreground shadow-2xs hover:border-primary hover:text-primary transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary cursor-pointer"
+                className="inline-flex w-full sm:w-auto items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2.5 sm:py-2 text-xs font-semibold text-foreground shadow-2xs hover:border-primary hover:text-primary transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary cursor-pointer min-h-[42px] sm:min-h-[38px]"
               >
                 <SlidersHorizontal className="h-3.5 w-3.5 text-subtle-foreground" aria-hidden="true" />
                 <span>Edit Log &amp; Progress</span>
@@ -156,11 +156,11 @@ export default function TitleInteractive({ media }: TitleInteractiveProps) {
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
               <button
                 type="button"
                 onClick={handleQuickTrack}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-xs hover:bg-primary-hover transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary cursor-pointer"
+                className="inline-flex w-full sm:w-auto items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 sm:py-2 text-xs font-semibold text-primary-foreground shadow-xs hover:bg-primary-hover transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary cursor-pointer min-h-[42px] sm:min-h-[38px]"
               >
                 <BookmarkPlus className="h-3.5 w-3.5" aria-hidden="true" />
                 <span>Track as Planned</span>

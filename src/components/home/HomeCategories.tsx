@@ -87,10 +87,10 @@ export default function HomeCategories() {
       <Container>
         <div className="mb-8 sm:mb-12 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-end">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-foreground">
               Five narrative formats. One unified system.
             </h2>
-            <p className="mt-2 text-sm text-muted-foreground">
+            <p className="mt-2 text-xs sm:text-sm text-muted-foreground">
               Each storytelling medium has unique pacing and structures. StoriList is crafted specifically for all five.
             </p>
           </div>

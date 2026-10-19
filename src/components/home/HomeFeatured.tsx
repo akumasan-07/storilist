@@ -80,25 +80,25 @@ export default function HomeFeatured() {
   return (
     <section className="relative">
       <Container>
-        <div className="mb-8 sm:mb-12 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-end">
+        <div className="mb-6 sm:mb-12 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-end">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-foreground">
               Representative highlights across the catalog.
             </h2>
-            <p className="mt-2 text-sm text-muted-foreground">
+            <p className="mt-2 text-xs sm:text-sm text-muted-foreground">
               A curated glimpse across mediums. Extensive search, filters, and genres live in Discover.
             </p>
           </div>
           <Link
             href="/discover"
-            className="inline-flex items-center gap-1.5 rounded-xl border border-border-strong bg-card px-4 py-2 text-xs font-semibold text-foreground transition hover:border-primary hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="inline-flex w-full sm:w-auto items-center justify-center gap-1.5 rounded-xl border border-border-strong bg-card px-4 py-2.5 min-h-[40px] text-xs font-semibold text-foreground transition hover:border-primary hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <span>Explore full catalog</span>
             <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 sm:gap-4">
           {FEATURED_TITLES.map((item) => (
             <div
               key={item.id}

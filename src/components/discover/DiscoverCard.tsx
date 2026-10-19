@@ -20,7 +20,7 @@ export default function DiscoverCard({
   const categoryStyle = getCategoryMeta(item.category);
 
   return (
-    <article className="group flex flex-col justify-between rounded-2xl border border-border bg-card p-3 shadow-xs transition duration-200 hover:-translate-y-0.5 hover:border-border-strong hover:shadow-md">
+    <article className="group flex flex-col justify-between rounded-2xl border border-border bg-card p-2.5 sm:p-3 shadow-xs transition duration-200 hover:-translate-y-0.5 hover:border-border-strong hover:shadow-md min-w-0">
       <div>
         {/* 2:3 Vertical Poster Container */}
         <Link
@@ -44,16 +44,16 @@ export default function DiscoverCard({
             />
 
             {/* Year Tag (Top-Left) */}
-            <div className="absolute top-2 left-2">
-              <span className="rounded-md bg-black/65 px-1.5 py-0.5 text-[10px] font-semibold text-white/95 backdrop-blur-xs shadow-xs">
+            <div className="absolute top-2 left-2 max-w-[48%]">
+              <span className="block truncate rounded-md bg-black/65 px-1.5 py-0.5 text-[10px] font-semibold text-white/95 backdrop-blur-xs shadow-xs">
                 {formatYear(item)}
               </span>
             </div>
 
             {/* Category Badge (Top-Right) */}
-            <div className="absolute top-2 right-2">
+            <div className="absolute top-2 right-2 max-w-[48%]">
               <span
-                className={`rounded-md border px-1.5 py-0.5 text-[10px] font-bold tracking-wider backdrop-blur-md shadow-xs ${categoryStyle.style}`}
+                className={`block truncate rounded-md border px-1.5 py-0.5 text-[10px] font-bold tracking-wider backdrop-blur-md shadow-xs ${categoryStyle.style}`}
               >
                 {categoryStyle.badge}
               </span>
@@ -62,19 +62,19 @@ export default function DiscoverCard({
         </Link>
 
         {/* Metadata & Synopsis */}
-        <div className="mt-3">
+        <div className="mt-2.5 sm:mt-3">
           <Link
             href={`/title/${item.id}`}
             className="block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary rounded"
           >
             <h2
-              className="line-clamp-1 text-sm font-semibold text-foreground group-hover:text-primary transition-colors"
+              className="line-clamp-1 text-xs sm:text-sm font-semibold text-foreground group-hover:text-primary transition-colors"
               title={item.title}
             >
               {item.title}
             </h2>
           </Link>
-          <p className="mt-0.5 text-xs text-subtle-foreground truncate">
+          <p className="mt-0.5 text-[11px] sm:text-xs text-subtle-foreground truncate">
             {item.studio} &bull; {item.format}
           </p>
 
@@ -85,7 +85,7 @@ export default function DiscoverCard({
                 key={genre}
                 type="button"
                 onClick={() => onSelectGenre(genre)}
-                className="rounded border border-border-subtle bg-muted/60 px-1.5 py-0.2 text-[10px] font-medium text-muted-foreground hover:border-border hover:text-foreground transition-colors cursor-pointer"
+                className="rounded border border-border-subtle bg-muted/60 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground hover:border-border hover:text-foreground transition-colors cursor-pointer"
               >
                 {genre}
               </button>
@@ -93,17 +93,17 @@ export default function DiscoverCard({
           </div>
 
           {/* Concise Synopsis */}
-          <p className="mt-2 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
+          <p className="mt-2 line-clamp-2 text-[10px] sm:text-[11px] leading-relaxed text-muted-foreground">
             {item.synopsis}
           </p>
         </div>
       </div>
 
-      {/* Card Footer: Rating & Quick Save Affordance */}
-      <div className="mt-3 flex items-center justify-between border-t border-border-subtle pt-2.5 text-xs">
-        <div className="flex items-center gap-1">
+      {/* Card Footer: Rating & Quick Save Button */}
+      <div className="mt-2.5 sm:mt-3 flex items-center justify-between border-t border-border-subtle pt-2 sm:pt-2.5 text-xs gap-1.5">
+        <div className="flex items-center gap-1 shrink-0">
           <Star className="h-3.5 w-3.5 fill-rating text-rating" aria-hidden="true" />
-          <span className="font-bold text-foreground">{item.rating.toFixed(1)}</span>
+          <span className="font-bold text-foreground text-xs">{item.rating.toFixed(1)}</span>
         </div>
 
         <button
@@ -111,7 +111,7 @@ export default function DiscoverCard({
           onClick={() => onToggleTrack(item)}
           title={isTracked ? `Remove ${item.title} from library` : `Add ${item.title} to library`}
           aria-label={isTracked ? `Remove ${item.title} from library` : `Add ${item.title} to library`}
-          className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary cursor-pointer ${isTracked
+          className={`inline-flex items-center justify-center gap-1 rounded-lg border px-2.5 sm:px-2 py-1.5 min-h-[36px] sm:min-h-[30px] text-xs sm:text-[11px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary cursor-pointer shrink-0 ${isTracked
               ? "border-primary bg-primary text-primary-foreground shadow-xs"
               : "border-border bg-card text-foreground shadow-2xs hover:border-primary hover:text-primary"
             }`}

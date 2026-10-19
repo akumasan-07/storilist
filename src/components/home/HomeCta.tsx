@@ -6,7 +6,7 @@ export default function HomeCta() {
   return (
     <section className="relative">
       <Container>
-        <div className="relative overflow-hidden rounded-3xl border border-border bg-card p-8 sm:p-12 text-center shadow-md">
+        <div className="relative overflow-hidden rounded-3xl border border-border bg-card p-6 sm:p-12 text-center shadow-md">
           {/* Ambient CTA glow */}
           <div
             aria-hidden="true"
@@ -19,24 +19,24 @@ export default function HomeCta() {
               SL
             </div>
 
-            <h2 className="mt-5 text-2xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+            <h2 className="mt-5 text-xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-foreground break-words">
               Ready to organize your entire media universe?
             </h2>
-            <p className="mt-3 text-sm sm:text-base text-muted-foreground">
+            <p className="mt-2.5 text-xs sm:text-sm md:text-base text-muted-foreground">
               Start logging your anime, comics, movies, series, and novels in one calm, unified personal space.
             </p>
 
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3.5">
+            <div className="mt-7 sm:mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-3.5 max-w-sm mx-auto sm:max-w-none">
               <Link
                 href="/discover"
-                className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 min-h-[44px] text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
                 <Compass className="h-4 w-4" aria-hidden="true" />
                 <span>Explore Catalog</span>
               </Link>
               <Link
                 href="/library"
-                className="inline-flex items-center gap-2 rounded-xl border border-border-strong bg-muted-surface px-5 py-3 text-sm font-semibold text-foreground transition hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-border-strong bg-muted-surface px-5 py-3 min-h-[44px] text-sm font-semibold text-foreground transition hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
                 <Library className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 <span>Go to My Library</span>

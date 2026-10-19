@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import Container from "./Container";
 import ThemeToggle from "./ThemeToggle";
+import { useClickOutside } from "@/hooks/useClickOutside";
 
 interface NavLink {
   label: string;
@@ -22,6 +23,9 @@ export default function Navbar() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Close mobile menu on outside click or Escape key
+  const mobileNavRef = useClickOutside<HTMLDivElement>(() => setMobileMenuOpen(false), mobileMenuOpen);
+
   const isActive = (href: string) => {
     if (href === "/") {
       return pathname === "/";
@@ -30,13 +34,14 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/80 bg-background/80 backdrop-blur-md transition-colors">
+    <header className="sticky top-0 z-50 w-full border-b border-border/80 bg-background/80 backdrop-blur-md transition-colors" ref={mobileNavRef}>
       <Container>
         <div className="flex h-16 items-center justify-between">
           {/* Logo / Branding */}
           <div className="flex items-center gap-8">
             <Link
               href="/"
+              onClick={() => setMobileMenuOpen(false)}
               className="flex items-center gap-2.5 font-bold tracking-tight text-foreground transition-opacity hover:opacity-90"
             >
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-extrabold shadow-sm shadow-primary/30">
@@ -82,12 +87,12 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen((prev) => !prev)}
                 aria-label="Toggle navigation menu"
                 aria-expanded={mobileMenuOpen}
-                className="inline-flex items-center justify-center rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-colors cursor-pointer"
               >
                 {mobileMenuOpen ? (
-                  <X className="h-6 w-6" aria-hidden="true" />
+                  <X className="h-5 w-5" aria-hidden="true" />
                 ) : (
-                  <Menu className="h-6 w-6" aria-hidden="true" />
+                  <Menu className="h-5 w-5" aria-hidden="true" />
                 )}
               </button>
             </div>
@@ -96,7 +101,7 @@ export default function Navbar() {
 
         {/* Mobile Navigation Menu */}
         {mobileMenuOpen && (
-          <nav className="border-t border-border py-3 md:hidden">
+          <nav className="border-t border-border py-3 md:hidden animate-in fade-in slide-in-from-top-2 duration-150">
             <div className="flex flex-col space-y-1">
               {NAV_LINKS.map((link) => {
                 const active = isActive(link.href);
@@ -105,10 +110,10 @@ export default function Navbar() {
                     key={link.href}
                     href={link.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`rounded-md px-3 py-2 text-base font-medium transition-colors ${
+                    className={`flex items-center rounded-xl px-4 py-3 min-h-[44px] text-sm font-semibold transition-colors ${
                       active
-                        ? "bg-muted font-semibold text-foreground"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        ? "bg-primary text-primary-foreground shadow-xs"
+                        : "text-foreground hover:bg-muted"
                     }`}
                   >
                     {link.label}

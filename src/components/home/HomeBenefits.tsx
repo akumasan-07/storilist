@@ -5,11 +5,11 @@ export default function HomeBenefits() {
   return (
     <section className="relative">
       <Container>
-        <div className="mx-auto max-w-2xl text-center mb-8 sm:mb-12">
-          <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+        <div className="mx-auto max-w-2xl text-center mb-6 sm:mb-12">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-foreground">
             Built for people who love stories, not social algorithms.
           </h2>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-2 text-xs sm:text-sm text-muted-foreground">
             A purposeful tracker that values your reading and viewing habits over endless feeds and engagement metrics.
           </p>
         </div>

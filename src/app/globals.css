@@ -126,3 +126,11 @@ input[type="number"].no-spinner {
   -moz-appearance: textfield;
   appearance: textfield;
 }
+
+@utility scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

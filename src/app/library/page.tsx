@@ -143,7 +143,7 @@ export default function LibraryPage() {
         {filteredEntries.length === 0 ? (
           <LibraryEmptyState isFiltered={isFiltered} onResetFilters={resetFilters} />
         ) : (
-          <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-5">
+          <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-5">
             {filteredEntries.map((item) => (
               <LibraryCard
                 key={item.mediaId}

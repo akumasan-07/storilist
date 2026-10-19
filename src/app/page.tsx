@@ -8,7 +8,7 @@ import HomeCta from "@/components/home/HomeCta";
 
 export default function HomePage() {
   return (
-    <div className="flex flex-col gap-20 sm:gap-28 py-6 sm:py-14 overflow-x-hidden">
+    <div className="flex flex-col gap-12 sm:gap-20 lg:gap-28 py-6 sm:py-12 overflow-x-hidden">
       <HomeHero />
       <HomePreview />
       <HomeCategories />

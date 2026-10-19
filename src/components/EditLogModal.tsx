@@ -14,7 +14,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { LibraryEntry, LibraryItem, LibraryStatus } from "@/types/library";
-import { CATEGORY_META } from "@/lib/media";
+import { getCategoryMeta } from "@/lib/media";
 import { getProgressPercent } from "@/lib/library";
 
 interface EditLogModalProps {
@@ -95,40 +95,22 @@ function EditLogModalDialog({
   }, [onClose]);
 
   const { media } = target;
-  const categoryStyle = CATEGORY_META[media.category];
+  const categoryStyle = getCategoryMeta(media.category);
   const hasTotal = media.totalProgress !== null;
 
   const updateProgress = (nextProgress: number) => {
-    let clampedProgress = nextProgress;
-    if (clampedProgress < 0) clampedProgress = 0;
-    if (media.totalProgress !== null && clampedProgress > media.totalProgress) {
-      clampedProgress = media.totalProgress;
+    let clamped = nextProgress < 0 ? 0 : nextProgress;
+    if (media.totalProgress !== null && clamped > media.totalProgress) {
+      clamped = media.totalProgress;
     }
 
-    setCurrentProgress(clampedProgress);
+    setCurrentProgress(clamped);
 
-    // Apply automatic transitions specifically when progress is changed
     setStatus((prevStatus) => {
-      if (prevStatus === "Dropped") {
-        return "Dropped";
-      }
-
-      if (clampedProgress === 0) {
-        return "Planned";
-      }
-
-      if (media.totalProgress !== null && clampedProgress >= media.totalProgress) {
-        return "Completed";
-      }
-
-      if (prevStatus === "Planned" || prevStatus === "Completed") {
-        return "In Progress";
-      }
-
-      if (prevStatus === "In Progress") {
-        return "In Progress";
-      }
-
+      if (prevStatus === "Dropped") return "Dropped";
+      if (clamped === 0) return "Planned";
+      if (media.totalProgress !== null && clamped >= media.totalProgress) return "Completed";
+      if (prevStatus === "Planned" || prevStatus === "Completed") return "In Progress";
       return prevStatus;
     });
   };
@@ -144,10 +126,6 @@ function EditLogModalDialog({
     }
   };
 
-  const handleStepProgress = (delta: number) => {
-    updateProgress(currentProgress + delta);
-  };
-
   const handleProgressInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawVal = e.target.value;
     if (rawVal === "") {
@@ -155,17 +133,7 @@ function EditLogModalDialog({
       return;
     }
     const val = parseInt(rawVal, 10);
-    if (isNaN(val) || val <= 0) {
-      updateProgress(0);
-      return;
-    }
-    updateProgress(val);
-  };
-
-  const handleConfirmRemove = () => {
-    onRemove(target.mediaId);
-    setIsConfirmingRemove(false);
-    onClose();
+    updateProgress(isNaN(val) || val <= 0 ? 0 : val);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -189,7 +157,7 @@ function EditLogModalDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 md:p-6">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-150"
@@ -197,17 +165,17 @@ function EditLogModalDialog({
         aria-hidden="true"
       />
 
-      {/* Dialog */}
+      {/* Dialog Window with max height & internal scrolling */}
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-log-title"
-        className="relative z-10 w-full max-w-lg rounded-2xl border border-border bg-card shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150"
+        className="relative z-10 w-full max-w-lg rounded-t-3xl sm:rounded-2xl border border-border bg-card shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-150 max-h-[92dvh] sm:max-h-[88dvh] flex flex-col"
       >
-        {/* Modal Header with Title & Poster preview */}
-        <div className="flex items-start justify-between border-b border-border bg-muted/30 p-4 sm:p-5">
-          <div className="flex items-center gap-3.5">
-            <div className="relative aspect-[2/3] w-12 shrink-0 overflow-hidden rounded-lg bg-muted shadow-sm">
+        {/* Header - Fixed at top */}
+        <div className="shrink-0 flex items-start justify-between border-b border-border bg-muted/30 p-4 sm:p-5">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="relative aspect-[2/3] w-11 sm:w-12 shrink-0 overflow-hidden rounded-lg bg-muted shadow-sm">
               <Image
                 src={media.poster}
                 alt={media.title}
@@ -216,18 +184,18 @@ function EditLogModalDialog({
                 className="object-cover"
               />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <span
-                  className={`rounded px-1.5 py-0.2 text-[10px] font-bold tracking-wider border ${categoryStyle.style}`}
+                  className={`rounded px-1.5 py-0.5 text-[10px] font-bold tracking-wider border ${categoryStyle.style}`}
                 >
                   {categoryStyle.badge}
                 </span>
-                <span className="text-xs text-subtle-foreground">
+                <span className="text-xs text-subtle-foreground truncate">
                   {media.studio} &bull; {media.format}
                 </span>
               </div>
-              <h2 id="edit-log-title" className="text-base font-bold text-foreground line-clamp-1">
+              <h2 id="edit-log-title" className="text-sm sm:text-base font-bold text-foreground truncate">
                 {media.title}
               </h2>
             </div>
@@ -237,14 +205,14 @@ function EditLogModalDialog({
             type="button"
             onClick={onClose}
             aria-label="Close modal"
-            className="rounded-lg p-1.5 text-subtle-foreground hover:bg-muted hover:text-foreground transition-colors"
+            className="rounded-lg p-2 min-h-[40px] min-w-[40px] flex items-center justify-center text-subtle-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer shrink-0 ml-2"
           >
-            <X className="h-4 w-4" aria-hidden="true" />
+            <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 
-        {/* Form Content */}
-        <form onSubmit={handleSubmit} className="p-4 sm:p-5 space-y-5">
+        {/* Scrollable Form Body */}
+        <form id="edit-log-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 sm:space-y-5 overscroll-contain">
           {/* Status Selection */}
           <div>
             <label className="block text-xs font-semibold text-foreground mb-2">
@@ -259,12 +227,12 @@ function EditLogModalDialog({
                     key={opt.status}
                     type="button"
                     onClick={() => handleStatusChange(opt.status)}
-                    className={`inline-flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${isSelected
+                    className={`inline-flex items-center justify-center gap-1.5 rounded-xl border px-2.5 py-2.5 sm:py-2 text-xs font-semibold transition-colors min-h-[42px] sm:min-h-[38px] cursor-pointer ${isSelected
                         ? opt.activeClass
                         : "border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"
                       }`}
                   >
-                    <IconComp className="h-3.5 w-3.5" aria-hidden="true" />
+                    <IconComp className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                     <span>{opt.label}</span>
                   </button>
                 );
@@ -274,11 +242,11 @@ function EditLogModalDialog({
 
           {/* Progress Stepper & Input */}
           <div>
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between mb-2 gap-2">
               <label className="text-xs font-semibold text-foreground">
                 Progress ({media.progressUnit})
               </label>
-              <div className="text-xs font-medium text-muted-foreground">
+              <div className="text-xs font-medium text-muted-foreground truncate">
                 {hasTotal ? (
                   <span>
                     {currentProgress} / {media.totalProgress} (
@@ -296,10 +264,10 @@ function EditLogModalDialog({
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => handleStepProgress(-1)}
+                onClick={() => updateProgress(currentProgress - 1)}
                 disabled={currentProgress <= 0}
                 aria-label="Decrease progress by 1"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-foreground transition-colors hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="inline-flex h-11 w-11 sm:h-10 sm:w-10 min-h-[44px] min-w-[44px] sm:min-h-[40px] sm:min-w-[40px] items-center justify-center rounded-xl border border-border bg-card text-foreground transition-colors hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shrink-0"
               >
                 <Minus className="h-4 w-4" aria-hidden="true" />
               </button>
@@ -312,16 +280,16 @@ function EditLogModalDialog({
                   value={currentProgress}
                   onChange={handleProgressInputChange}
                   aria-label="Current progress unit"
-                  className="no-spinner [appearance:textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none w-full rounded-xl border border-border bg-muted/40 px-3 py-2 text-center text-sm font-bold text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="no-spinner w-full h-11 sm:h-10 rounded-xl border border-border bg-muted/40 px-3 py-2 text-center text-sm sm:text-base font-bold text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
 
               <button
                 type="button"
-                onClick={() => handleStepProgress(1)}
+                onClick={() => updateProgress(currentProgress + 1)}
                 disabled={hasTotal && currentProgress >= (media.totalProgress || 0)}
                 aria-label="Increase progress by 1"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-foreground transition-colors hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="inline-flex h-11 w-11 sm:h-10 sm:w-10 min-h-[44px] min-w-[44px] sm:min-h-[40px] sm:min-w-[40px] items-center justify-center rounded-xl border border-border bg-card text-foreground transition-colors hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shrink-0"
               >
                 <Plus className="h-4 w-4" aria-hidden="true" />
               </button>
@@ -331,7 +299,7 @@ function EditLogModalDialog({
                   type="button"
                   onClick={() => updateProgress(media.totalProgress || 0)}
                   disabled={currentProgress === media.totalProgress}
-                  className="rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="h-11 sm:h-10 rounded-xl border border-border bg-card px-3 sm:px-3.5 text-xs font-semibold text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shrink-0"
                   title="Set to max completed"
                 >
                   Max
@@ -352,11 +320,11 @@ function EditLogModalDialog({
               </span>
             </div>
 
-            <div className="flex flex-wrap items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
               <button
                 type="button"
                 onClick={() => setUserRating(null)}
-                className={`rounded-lg border px-2 py-1 text-xs font-medium transition-colors ${userRating === null
+                className={`h-9 sm:h-8 px-2.5 rounded-lg border text-xs font-medium transition-colors cursor-pointer ${userRating === null
                     ? "border-primary bg-primary-subtle text-primary font-bold"
                     : "border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
@@ -370,7 +338,7 @@ function EditLogModalDialog({
                     key={score}
                     type="button"
                     onClick={() => setUserRating(isSelected ? null : score)}
-                    className={`h-8 w-8 rounded-lg border text-xs font-bold transition-colors ${isSelected
+                    className={`h-9 w-9 sm:h-8 sm:w-8 min-h-[36px] min-w-[36px] sm:min-h-[32px] sm:min-w-[32px] rounded-lg border text-xs font-bold transition-colors cursor-pointer ${isSelected
                         ? "border-primary bg-primary text-primary-foreground shadow-2xs"
                         : "border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"
                       }`}
@@ -397,23 +365,23 @@ function EditLogModalDialog({
             />
           </div>
 
-          {/* Visually Separated Action: Untrack / Remove from Library */}
-          <div className="border-t border-border-subtle pt-4">
+          {/* Untrack / Remove from Library */}
+          <div className="border-t border-border-subtle pt-3.5">
             {!isConfirmingRemove ? (
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
                 <div>
                   <h3 className="text-xs font-semibold text-foreground">
                     Remove from Library
                   </h3>
                   <p className="text-[11px] text-muted-foreground">
-                    Stop tracking this title. Your progress, status, and personal ratings will be removed.
+                    Stop tracking this title. Your progress and ratings will be removed.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setIsConfirmingRemove(true)}
                   aria-label={`Remove ${media.title} from library`}
-                  className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-rose-500/25 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 hover:border-rose-500/40 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-500"
+                  className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl border border-rose-500/25 bg-rose-500/10 px-3.5 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 hover:border-rose-500/40 transition-colors min-h-[38px] cursor-pointer self-start sm:self-auto"
                 >
                   <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                   <span>Remove</span>
@@ -427,23 +395,27 @@ function EditLogModalDialog({
                       Remove &ldquo;{media.title}&rdquo; from your library?
                     </p>
                     <p className="text-[11px] text-muted-foreground mt-0.5">
-                      This will remove your tracking entry. The title will remain available in Discover.
+                      This removes your log entry. The title remains available in Discover.
                     </p>
                   </div>
                   <div className="flex items-center gap-2 self-end sm:self-auto">
                     <button
                       type="button"
                       onClick={() => setIsConfirmingRemove(false)}
-                      className="rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-semibold text-foreground hover:bg-muted transition-colors"
+                      className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer min-h-[36px]"
                     >
                       Cancel
                     </button>
                     <button
                       type="button"
-                      onClick={handleConfirmRemove}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700 shadow-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-600"
+                      onClick={() => {
+                        onRemove(target.mediaId);
+                        setIsConfirmingRemove(false);
+                        onClose();
+                      }}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-rose-700 shadow-xs transition-colors cursor-pointer min-h-[36px]"
                     >
-                      <Trash2 className="h-3 w-3" aria-hidden="true" />
+                      <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                       <span>Confirm</span>
                     </button>
                   </div>
@@ -451,24 +423,25 @@ function EditLogModalDialog({
               </div>
             )}
           </div>
-
-          {/* Modal Footer Actions */}
-          <div className="flex items-center justify-end gap-2.5 border-t border-border pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="rounded-xl bg-primary px-5 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary-hover shadow-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            >
-              Save Changes
-            </button>
-          </div>
         </form>
+
+        {/* Sticky Modal Footer Actions - Always visible on screen */}
+        <div className="shrink-0 border-t border-border bg-card p-4 flex items-center justify-end gap-2.5">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 sm:flex-none rounded-xl border border-border bg-card px-4 py-2.5 sm:py-2 text-xs font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer min-h-[42px] sm:min-h-[38px] text-center justify-center"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            form="edit-log-form"
+            className="flex-1 sm:flex-none rounded-xl bg-primary px-5 py-2.5 sm:py-2 text-xs font-semibold text-primary-foreground hover:bg-primary-hover shadow-xs transition-colors cursor-pointer min-h-[42px] sm:min-h-[38px] text-center justify-center"
+          >
+            Save Changes
+          </button>
+        </div>
       </div>
     </div>
   );
