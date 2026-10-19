@@ -1,13 +1,110 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #09090b;
-  --foreground: #f4f4f5;
+  --background: #e8ece7;
+  --foreground: #202923;
+
+  --card: #f0f3ee;
+  --card-foreground: #202923;
+  --card-hover: #dfe6de;
+
+  --muted: #dce4da;
+  --muted-surface: #e4eae1;
+  --muted-foreground: #68756b;
+  --subtle-foreground: #929d94;
+
+  --border: #cdd8cc;
+  --border-subtle: #dfe6dd;
+  --border-strong: #b6c5b5;
+
+  --primary: #39806b;
+  --primary-hover: #2d6957;
+  --primary-foreground: #ffffff;
+
+  --primary-subtle: #dcece3;
+  --primary-subtle-border: rgba(57, 128, 107, 0.25);
+  --primary-subtle-foreground: #28634f;
+
+  /* Category accents */
+  --accent-anime: #4e9b9b;
+  --accent-movie: #bd765e;
+  --accent-series: #8176a4;
+  --accent-comic: #b18b4e;
+  --accent-novel: #4d916d;
+
+  --rating: #bd8c3e;
+}
+
+.dark {
+  --background: #101815;
+  --foreground: #e8f0e8;
+
+  --card: #17231d;
+  --card-foreground: #e8f0e8;
+  --card-hover: #203127;
+
+  --muted: #26382d;
+  --muted-surface: #1d2c23;
+  --muted-foreground: #a0b2a3;
+  --subtle-foreground: #718375;
+
+  --border: #304638;
+  --border-subtle: #23352a;
+  --border-strong: #46604d;
+
+  --primary: #69b99a;
+  --primary-hover: #87cfb0;
+  --primary-foreground: #102018;
+
+  --primary-subtle: rgba(105, 185, 154, 0.15);
+  --primary-subtle-border: rgba(105, 185, 154, 0.32);
+  --primary-subtle-foreground: #91d8b9;
+
+  /* Category accents */
+  --accent-anime: #72c5c1;
+  --accent-movie: #df9276;
+  --accent-series: #aa9bd0;
+  --accent-comic: #d5ad65;
+  --accent-novel: #7bc59b;
+
+  --rating: #dfb15b;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-card-hover: var(--card-hover);
+
+  --color-muted: var(--muted);
+  --color-muted-surface: var(--muted-surface);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-subtle-foreground: var(--subtle-foreground);
+
+  --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-strong: var(--border-strong);
+
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-primary-subtle: var(--primary-subtle);
+  --color-primary-subtle-border: var(--primary-subtle-border);
+  --color-primary-subtle-foreground: var(--primary-subtle-foreground);
+
+  --color-accent-anime: var(--accent-anime);
+  --color-accent-movie: var(--accent-movie);
+  --color-accent-series: var(--accent-series);
+  --color-accent-comic: var(--accent-comic);
+  --color-accent-novel: var(--accent-novel);
+
+  --color-rating: var(--rating);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -16,4 +113,16 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+}
+
+/* Hide native spinner controls on number inputs when custom steppers are provided */
+input[type="number"].no-spinner::-webkit-inner-spin-button,
+input[type="number"].no-spinner::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"].no-spinner {
+  -moz-appearance: textfield;
+  appearance: textfield;
 }
