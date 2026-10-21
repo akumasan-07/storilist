@@ -4,16 +4,18 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
-import { authSchema } from "@/lib/validation/auth";
+import { loginSchema, signupSchema } from "@/lib/validation/auth";
 import { sanitizeRedirectPath } from "@/lib/supabase/redirect";
 
 export interface AuthActionState {
   errors?: {
+    username?: string[];
     email?: string[];
     password?: string[];
     general?: string[];
   };
   values?: {
+    username?: string;
     email?: string;
   };
   requiresConfirmation?: boolean;
@@ -29,7 +31,7 @@ export async function login(
   const nextParam = formData.get("next") ? String(formData.get("next")) : undefined;
   const targetPath = sanitizeRedirectPath(nextParam);
 
-  const validation = authSchema.safeParse({ email, password });
+  const validation = loginSchema.safeParse({ email, password });
   if (!validation.success) {
     return {
       errors: validation.error.flatten().fieldErrors,
@@ -60,16 +62,34 @@ export async function signup(
   prevState: AuthActionState,
   formData: FormData
 ): Promise<AuthActionState> {
+  const username = String(formData.get("username") || "");
   const email = String(formData.get("email") || "");
   const password = String(formData.get("password") || "");
   const nextParam = formData.get("next") ? String(formData.get("next")) : undefined;
   const targetPath = sanitizeRedirectPath(nextParam);
 
-  const validation = authSchema.safeParse({ email, password });
+  const validation = signupSchema.safeParse({ username, email, password });
   if (!validation.success) {
     return {
       errors: validation.error.flatten().fieldErrors,
-      values: { email },
+      values: { username, email },
+    };
+  }
+
+  const supabase = await createClient();
+
+  // Check username availability via security-definer RPC function
+  const { data: isAvailable, error: rpcError } = await supabase.rpc(
+    "is_username_available",
+    { name: validation.data.username }
+  );
+
+  if (rpcError || !isAvailable) {
+    return {
+      errors: {
+        username: ["Username is already taken"],
+      },
+      values: { username, email },
     };
   }
 
@@ -78,11 +98,13 @@ export async function signup(
   const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
   const origin = `${protocol}://${host}`;
 
-  const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email: validation.data.email,
     password: validation.data.password,
     options: {
+      data: {
+        username: validation.data.username,
+      },
       emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(targetPath)}`,
     },
   });
@@ -90,9 +112,11 @@ export async function signup(
   if (error) {
     return {
       errors: {
-        general: ["Unable to create account. Please check your information and try again."],
+        general: [
+          "Couldn't create your account, please try a different username or try again",
+        ],
       },
-      values: { email },
+      values: { username, email },
     };
   }
 
@@ -100,7 +124,7 @@ export async function signup(
   if (data.user && !data.session) {
     return {
       requiresConfirmation: true,
-      values: { email },
+      values: { username, email },
       successMessage: "Please check your email to confirm your account before logging in.",
     };
   }

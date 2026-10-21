@@ -76,6 +76,36 @@ export default function SignupForm({ next }: SignupFormProps) {
 
           <div>
             <label
+              htmlFor="username"
+              className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5"
+            >
+              Username
+            </label>
+            <input
+              id="username"
+              name="username"
+              type="text"
+              autoComplete="username"
+              required
+              defaultValue={state.values?.username || ""}
+              placeholder="username"
+              aria-describedby={state.errors?.username ? "username-error" : undefined}
+              aria-invalid={Boolean(state.errors?.username)}
+              className="w-full rounded-xl border border-border bg-muted/40 px-3.5 py-2.5 text-sm text-foreground placeholder:text-subtle-foreground focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
+            />
+            {state.errors?.username ? (
+              <p id="username-error" className="mt-1.5 text-xs text-red-600 dark:text-red-400">
+                {state.errors.username[0]}
+              </p>
+            ) : (
+              <p className="mt-1.5 text-[11px] text-subtle-foreground">
+                3–20 characters, letters, numbers, and underscores.
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label
               htmlFor="email"
               className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5"
             >
@@ -124,7 +154,7 @@ export default function SignupForm({ next }: SignupFormProps) {
               </p>
             ) : (
               <p className="mt-1.5 text-[11px] text-subtle-foreground">
-                Must be between 8 and 72 characters long.
+                At least 8 characters.
               </p>
             )}
           </div>

@@ -23,6 +23,7 @@ const NAV_LINKS: NavLink[] = [
 export interface NavbarProps {
   user?: {
     email?: string | null;
+    username?: string | null;
   } | null;
 }
 
@@ -50,7 +51,8 @@ export default function Navbar({ user }: NavbarProps) {
     return pathname.startsWith(href);
   };
 
-  const username = user?.email ? user.email.split("@")[0] : null;
+  const emailLocalPart = user?.email ? user.email.split("@")[0] : null;
+  const displayName = user?.username || emailLocalPart || "Account";
 
   return (
     <header
@@ -113,7 +115,7 @@ export default function Navbar({ user }: NavbarProps) {
                     <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10 text-primary">
                       <User className="h-3.5 w-3.5" aria-hidden="true" />
                     </div>
-                    <span className="max-w-[120px] truncate">{username}</span>
+                    <span className="max-w-[120px] truncate">{displayName}</span>
                     <ChevronDown
                       className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-150 ${
                         userMenuOpen ? "rotate-180" : ""
@@ -124,11 +126,15 @@ export default function Navbar({ user }: NavbarProps) {
 
                   {userMenuOpen && (
                     <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-border bg-card p-1.5 shadow-lg animate-in fade-in slide-in-from-top-2 duration-150 z-50">
-                      <div className="px-3 py-2 text-xs text-muted-foreground border-b border-border mb-1">
-                        Signed in as
-                        <div className="font-semibold text-foreground truncate mt-0.5">
-                          {user.email}
+                      <div className="px-3 py-2 text-xs border-b border-border mb-1">
+                        <div className="font-semibold text-foreground truncate">
+                          {displayName}
                         </div>
+                        {user.email && (
+                          <div className="text-muted-foreground truncate mt-0.5">
+                            {user.email}
+                          </div>
+                        )}
                       </div>
                       <form action={logout}>
                         <button
@@ -205,11 +211,15 @@ export default function Navbar({ user }: NavbarProps) {
             {/* Mobile Auth Section */}
             {user ? (
               <div className="border-t border-border pt-3 mt-3 px-1">
-                <div className="px-3 py-2 text-xs text-muted-foreground">
-                  Signed in as{" "}
-                  <span className="font-semibold text-foreground">
-                    {user.email}
-                  </span>
+                <div className="px-3 py-2 text-xs mb-1">
+                  <div className="font-semibold text-foreground truncate">
+                    {displayName}
+                  </div>
+                  {user.email && (
+                    <div className="text-muted-foreground truncate mt-0.5">
+                      {user.email}
+                    </div>
+                  )}
                 </div>
                 <form action={logout}>
                   <button

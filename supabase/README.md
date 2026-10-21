@@ -28,7 +28,18 @@ This populates `public.media` with all 15 starter titles. The statement uses `ON
 
 ---
 
-## 3. Verification
+## 3. Apply Username Migration
+
+1. In the **SQL Editor**, click **New query**.
+2. Copy and paste the entire contents of [`migrations/0002_username.sql`](./migrations/0002_username.sql).
+3. Click **Run**.
+4. Confirm execution succeeds.
+
+This creates the case-insensitive unique index on `lower(username)`, updates `handle_new_user()` to persist usernames from signup metadata, and registers the `is_username_available(name)` check function.
+
+---
+
+## 4. Verification
 
 - Go to **Table Editor** > **media**: verify all 15 records are present with their categories, genres, creators, and formats.
-- `public.profiles` and `public.library_entries` remain empty until real users sign up and add items to their personal library.
+- `public.profiles` and `public.library_entries` receive rows as users register and manage their library.

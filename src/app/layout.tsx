@@ -29,17 +29,27 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   let user = null;
+  let username: string | null = null;
   try {
     const supabase = await createClient();
     const {
       data: { user: verifiedUser },
     } = await supabase.auth.getUser();
     user = verifiedUser;
+    if (verifiedUser) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("username")
+        .eq("id", verifiedUser.id)
+        .maybeSingle();
+      username = profile?.username ?? null;
+    }
   } catch {
     user = null;
+    username = null;
   }
 
-  const userProp = user ? { email: user.email } : null;
+  const userProp = user ? { email: user.email, username } : null;
 
   return (
     <html
