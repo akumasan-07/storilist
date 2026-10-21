@@ -3,7 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import Container from "@/components/Container";
-import { getMediaById, getRelatedMedia } from "@/data/sampleMedia";
+import { getMediaById, getRelatedMedia } from "@/lib/db/media";
+import { getUserLibraryItems } from "@/lib/db/library";
+import { createClient } from "@/lib/supabase/server";
+import LibrarySync from "@/components/LibrarySync";
 import TitleHero from "@/components/title/TitleHero";
 import TitleSidebar from "@/components/title/TitleSidebar";
 import TitleRelated from "@/components/title/TitleRelated";
@@ -15,7 +18,7 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
-  const media = getMediaById(id);
+  const media = await getMediaById(id);
 
   if (!media) {
     return {
@@ -37,16 +40,24 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function TitleDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const media = getMediaById(id);
+  const media = await getMediaById(id);
 
   if (!media) {
     notFound();
   }
 
-  const relatedMedia = getRelatedMedia(media.category, media.id, 4);
+  const relatedMedia = await getRelatedMedia(media.category, media.id, 4);
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const userLibraryItems = user ? await getUserLibraryItems(user.id) : [];
 
   return (
     <div className="py-8 sm:py-12">
+      <LibrarySync items={userLibraryItems} />
       <Container>
         {/* Back Navigation Bar */}
         <div className="mb-6 flex items-center justify-between">

@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
 import {
   Star,
   BookmarkPlus,
@@ -16,6 +17,7 @@ import { MediaItem } from "@/types/media";
 import { LibraryEntry, LibraryItem, LibraryStatus } from "@/types/library";
 import { useLibrary } from "@/context/LibraryContext";
 import { createEntryFromMedia, getProgressPercent } from "@/lib/library";
+import { sanitizeRedirectPath } from "@/lib/supabase/redirect";
 import EditLogModal from "@/components/EditLogModal";
 
 const STATUS_CONFIG: Record<
@@ -66,7 +68,9 @@ interface TitleInteractiveProps {
 }
 
 export default function TitleInteractive({ media }: TitleInteractiveProps) {
-  const { getEntry, saveEntry, removeEntry } = useLibrary();
+  const router = useRouter();
+  const pathname = usePathname();
+  const { getEntry, saveEntry, removeEntry, isAuthenticated } = useLibrary();
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
 
   const trackedEntry: LibraryEntry | undefined = getEntry(media.id);
@@ -86,7 +90,21 @@ export default function TitleInteractive({ media }: TitleInteractiveProps) {
       : null;
 
   const handleQuickTrack = () => {
-    saveEntry(createEntryFromMedia(media));
+    if (!isAuthenticated) {
+      const target = sanitizeRedirectPath(pathname);
+      router.push(`/login?next=${encodeURIComponent(target)}`);
+      return;
+    }
+    saveEntry(createEntryFromMedia(media), media);
+  };
+
+  const handleOpenLogModal = () => {
+    if (!isAuthenticated) {
+      const target = sanitizeRedirectPath(pathname);
+      router.push(`/login?next=${encodeURIComponent(target)}`);
+      return;
+    }
+    setIsLogModalOpen(true);
   };
 
   return (
@@ -139,7 +157,7 @@ export default function TitleInteractive({ media }: TitleInteractiveProps) {
             <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
               <button
                 type="button"
-                onClick={() => setIsLogModalOpen(true)}
+                onClick={handleOpenLogModal}
                 className="inline-flex w-full sm:w-auto items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2.5 sm:py-2 text-xs font-semibold text-foreground shadow-2xs hover:border-primary hover:text-primary transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary cursor-pointer min-h-[42px] sm:min-h-[38px]"
               >
                 <SlidersHorizontal className="h-3.5 w-3.5 text-subtle-foreground" aria-hidden="true" />
@@ -175,7 +193,7 @@ export default function TitleInteractive({ media }: TitleInteractiveProps) {
           item={trackedItem}
           isOpen={isLogModalOpen}
           onClose={() => setIsLogModalOpen(false)}
-          onSave={saveEntry}
+          onSave={(entry) => saveEntry(entry, media)}
           onRemove={removeEntry}
         />
       )}

@@ -84,7 +84,16 @@ export async function signup(
     { name: validation.data.username }
   );
 
-  if (rpcError || !isAvailable) {
+  if (rpcError) {
+    return {
+      errors: {
+        general: ["Couldn't create your account, please try again"],
+      },
+      values: { username, email },
+    };
+  }
+
+  if (isAvailable === false) {
     return {
       errors: {
         username: ["Username is already taken"],

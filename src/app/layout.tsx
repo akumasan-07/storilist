@@ -65,7 +65,7 @@ export default async function RootLayout({
         />
       </head>
       <body className="flex min-h-full flex-col bg-background text-foreground transition-colors selection:bg-primary/30 selection:text-primary-subtle-foreground">
-        <LibraryProvider>
+        <LibraryProvider isAuthenticated={Boolean(user)}>
           <Navbar user={userProp} />
           <main className="flex-1 flex flex-col">{children}</main>
           <Footer />
