@@ -9,19 +9,40 @@ export function useClickOutside<T extends HTMLElement = HTMLElement>(
   active: boolean = true
 ): RefObject<T | null> {
   const ref = useRef<T>(null);
+  const handlerRef = useRef(handler);
+
+  useEffect(() => {
+    handlerRef.current = handler;
+  }, [handler]);
 
   useEffect(() => {
     if (!active) return;
 
     function handleClickOutside(event: MouseEvent) {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
-        handler();
+      const el = ref.current;
+      const target = event.target as Node | null;
+
+      if (!el || !target) return;
+
+      // Ignore events whose target is inside the referenced element
+      if (el === target || el.contains(target)) {
+        return;
       }
+
+      // Also verify with composedPath for SVGs and shadow DOM
+      if (typeof event.composedPath === "function") {
+        const path = event.composedPath();
+        if (path.includes(el)) {
+          return;
+        }
+      }
+
+      handlerRef.current();
     }
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
-        handler();
+        handlerRef.current();
       }
     }
 
@@ -32,7 +53,7 @@ export function useClickOutside<T extends HTMLElement = HTMLElement>(
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [handler, active]);
+  }, [active]);
 
   return ref;
 }

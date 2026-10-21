@@ -1,0 +1,52 @@
+-- Seed data for public.media from src/data/sampleMedia.ts
+-- Total items: 15
+
+insert into public.media (
+  id,
+  title,
+  category,
+  format,
+  studio,
+  poster,
+  synopsis,
+  genres,
+  rating,
+  start_year,
+  end_year,
+  total_progress,
+  progress_unit,
+  release_status,
+  creators,
+  tagline
+) values
+  ('frieren', 'Frieren: Beyond Journey''s End', 'Anime', 'TV Series', 'Madhouse', '/posters/frieren.jpg', 'An elf mage journeys toward the resting place of souls, learning the weight of human bonds and fleeting moments across lands once saved by her party.', array['Fantasy', 'Adventure'], 9.6, 2023, 2023, 28, 'episodes', 'Completed', array['Kanehito Yamada (Author)', 'Tsukasa Abe (Illustrator)', 'Keiichirou Saitou (Director)'], 'The journey begins after the adventure ends.'),
+  ('attack-on-titan', 'Attack on Titan', 'Anime', 'TV Series', 'MAPPA / Wit', '/posters/aot.jpg', 'Humanity fights for survival against gigantic humanoid titans behind monumental stone fortifications, uncovering deep conspiratorial history.', array['Action', 'Dark Fantasy'], 9.1, 2013, 2023, 89, 'episodes', 'Completed', array['Hajime Isayama (Original Creator)', 'Tetsuro Araki (Director)'], 'If you win, you live. If you lose, you die. If you don''t fight, you can''t win.'),
+  ('spirited-away', 'Spirited Away', 'Anime', 'Film', 'Studio Ghibli', '/posters/spirited-away.jpg', 'A young girl wanders into an enchanted spirit bathhouse realm ruled by a sorceress, determined to save her parents and find her way home.', array['Fantasy', 'Supernatural'], 9.3, 2001, 2001, 125, 'mins', 'Completed', array['Hayao Miyazaki (Director & Writer)', 'Joe Hisaishi (Composer)'], 'Nothing that happens is ever forgotten, even if you can''t remember.'),
+  ('solo-leveling', 'Solo Leveling', 'Comics', 'Manhwa', 'Redice Studio', '/posters/solo-leveling.jpg', 'A weak E-rank hunter awakens an exclusive mystical quest interface allowing him to level up without limits and command shadows.', array['Action', 'Fantasy'], 9, 2018, 2021, 179, 'chapters', 'Completed', array['Chugong (Author)', 'DUBU (Illustrator)'], 'The World''s Weakest Hunter ascends to absolute dominance.'),
+  ('berserk', 'Berserk', 'Comics', 'Manga', 'Hakusensha', '/posters/berserk.jpg', 'The lone mercenary Guts wields the massive Dragonslayer sword seeking retribution across a grim medieval world haunted by demonic apostles.', array['Dark Fantasy', 'Action'], 9.5, 1989, null, null, 'chapters', 'Ongoing', array['Kentaro Miura (Author)', 'Studio Gaga (Continuation)'], 'An enduring epic of fate, will, and vengeance.'),
+  ('chainsaw-man', 'Chainsaw Man', 'Comics', 'Manga', 'Shueisha', '/posters/chainsaw-man.jpg', 'A destitute young man merges with a canine chainsaw devil to hunt lethal supernatural threats for the Public Safety Devil Hunters.', array['Action', 'Supernatural'], 8.8, 2018, null, 185, 'chapters', 'Ongoing', array['Tatsuki Fujimoto (Author & Illustrator)'], 'Rip and tear through the devils of humanity''s deepest fears.'),
+  ('dune-part-two', 'Dune: Part Two', 'Movies', 'Feature Film', 'Legendary', '/posters/dune-two.jpg', 'Paul Atreides unites with Chani and the Fremen people of Arrakis to wage a spiritual war of vengeance against those who destroyed his family.', array['Sci-Fi', 'Adventure'], 9.3, 2024, 2024, 166, 'mins', 'Completed', array['Denis Villeneuve (Director)', 'Frank Herbert (Novel)', 'Hans Zimmer (Score)'], 'Long live the fighters.'),
+  ('interstellar', 'Interstellar', 'Movies', 'Feature Film', 'Syncopy', '/posters/interstellar.jpg', 'A team of space explorers travels through a wormhole beyond Saturn seeking a viable new home for humanity as Earth faces agricultural collapse.', array['Sci-Fi', 'Drama'], 8.9, 2014, 2014, 169, 'mins', 'Completed', array['Christopher Nolan (Director)', 'Jonathan Nolan (Writer)', 'Hans Zimmer (Composer)'], 'Mankind was born on Earth. It was never meant to die here.'),
+  ('spider-man-across-the-spider-verse', 'Spider-Man: Across the Spider-Verse', 'Movies', 'Feature Film', 'Sony Pictures', '/posters/spider-verse.jpg', 'Miles Morales catapults across the Multiverse, clashing with Miguel O''Hara and the Spider-Society over the cost of saving the people he loves.', array['Animation', 'Action'], 9.1, 2023, 2023, 140, 'mins', 'Completed', array['Joaquim Dos Santos, Kemp Powers, Justin K. Thompson (Directors)', 'Phil Lord, Christopher Miller (Writers)'], 'It''s how you wear the mask that matters.'),
+  ('severance', 'Severance', 'Series', 'TV Series', 'Apple Studios', '/posters/severance.jpg', 'Corporate employees at Lumon Industries undergo a surgical procedure that strictly divides office memories from personal home life.', array['Sci-Fi', 'Thriller'], 9.2, 2022, null, 9, 'episodes', 'Ongoing', array['Dan Erickson (Creator)', 'Ben Stiller (Executive Producer / Director)'], 'Please do not attempt to adjust your innies.'),
+  ('arcane', 'Arcane', 'Series', 'TV Series', 'Fortiche / Riot', '/posters/arcane.jpg', 'Two orphaned sisters find themselves on opposing sides of a devastating conflict between the utopian city of Piltover and the oppressed undercity of Zaun.', array['Action', 'Sci-Fi'], 9.4, 2021, 2024, 18, 'episodes', 'Completed', array['Christian Linke, Alex Yee (Creators)', 'Fortiche Production'], 'Every legend has a beginning.'),
+  ('succession', 'Succession', 'Series', 'TV Series', 'HBO', '/posters/succession.jpg', 'The dysfunctional adult children of an aging media titan vie for ultimate corporate and emotional control over their global entertainment empire.', array['Drama'], 9.2, 2018, 2023, 39, 'episodes', 'Completed', array['Jesse Armstrong (Creator)', 'Nicholas Britell (Composer)'], 'Who will take the crown?'),
+  ('omniscient-readers-viewpoint', 'Omniscient Reader''s Viewpoint', 'Novels', 'Web Novel', 'Sing Shong', '/posters/orv.jpg', 'The sole dedicated reader of an obscure apocalyptic novel suddenly discovers its terrifying scenarios and mythical constellations unfolding in real life.', array['Supernatural', 'Action'], 9.4, 2018, 2020, 551, 'chapters', 'Completed', array['Sing Shong (Author)', 'Blackbox (Illustrator)'], 'There are three ways to survive in a ruined world.'),
+  ('the-three-body-problem', 'The Three-Body Problem', 'Novels', 'Novel', 'Liu Cixin', '/posters/three-body.jpg', 'A secret military signal sent into deep space invites an alien civilization facing planetary doom toward Earth across a silent cosmic forest.', array['Sci-Fi', 'Mystery'], 9, 2008, 2008, 3, 'volumes', 'Completed', array['Liu Cixin (Author)', 'Ken Liu (Translator)'], 'Do not answer. Do not answer. Do not answer.'),
+  ('lord-of-the-mysteries', 'Lord of the Mysteries', 'Novels', 'Web Novel', 'Cuttlefish', '/posters/lotm.jpg', 'Zhou Mingrui awakens in a Victorian steampunk world full of arcane potion sequences, secret tarot clubs, and terrifying cosmic deities.', array['Mystery', 'Steampunk'], 9.5, 2018, 2020, 1432, 'chapters', 'Completed', array['Cuttlefish That Loves Diving (Author)'], 'The Fool that doesn''t belong to this era; The mysterious ruler above the gray fog.')
+on conflict (id) do update set
+  title = excluded.title,
+  category = excluded.category,
+  format = excluded.format,
+  studio = excluded.studio,
+  poster = excluded.poster,
+  synopsis = excluded.synopsis,
+  genres = excluded.genres,
+  rating = excluded.rating,
+  start_year = excluded.start_year,
+  end_year = excluded.end_year,
+  total_progress = excluded.total_progress,
+  progress_unit = excluded.progress_unit,
+  release_status = excluded.release_status,
+  creators = excluded.creators,
+  tagline = excluded.tagline;

@@ -5,6 +5,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { LibraryProvider } from "@/context/LibraryContext";
 
+import { createClient } from "@/lib/supabase/server";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -21,11 +23,24 @@ export const metadata: Metadata = {
     "Track anime, comics, movies, series, and novels in one unified personal library.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  let user = null;
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user: verifiedUser },
+    } = await supabase.auth.getUser();
+    user = verifiedUser;
+  } catch {
+    user = null;
+  }
+
+  const userProp = user ? { email: user.email } : null;
+
   return (
     <html
       lang="en"
@@ -41,7 +56,7 @@ export default function RootLayout({
       </head>
       <body className="flex min-h-full flex-col bg-background text-foreground transition-colors selection:bg-primary/30 selection:text-primary-subtle-foreground">
         <LibraryProvider>
-          <Navbar />
+          <Navbar user={userProp} />
           <main className="flex-1 flex flex-col">{children}</main>
           <Footer />
         </LibraryProvider>

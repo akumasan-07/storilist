@@ -33,28 +33,34 @@ A unified cross-medium narrative tracking platform designed for tracking **Anime
 - Node.js 18.17+ or later
 - npm (or yarn / pnpm / bun)
 
+### Environment Variables
+
+Create a `.env.local` file in the root directory (see `.env.example`):
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-project-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+```
+
+Apply migrations and catalogue seed data in Supabase following [supabase/README.md](supabase/README.md).
+
 ### Installation & Run
 
-1. Clone or navigate to the repository:
-   ```bash
-   cd storilist
-   ```
-
-2. Install dependencies:
+1. Install dependencies:
    ```bash
    npm install
    ```
 
-3. Start the local development server:
+2. Start the local development server:
    ```bash
    npm run dev
    ```
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+3. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### Available Scripts
 
-- `npm run dev` — Launch the local Turbopack development server.
+- `npm run dev` — Launch the local development server.
 - `npm run build` — Create an optimized production build.
 - `npm run start` — Run the compiled production server.
 - `npm run lint` — Run ESLint across the codebase.
@@ -63,6 +69,7 @@ A unified cross-medium narrative tracking platform designed for tracking **Anime
 
 ## Roadmap
 
-- [ ] **Backend & Authentication**: PostgreSQL / SQLite persistence, user accounts, secure authentication sessions, and private library visibility controls.
+- [x] **Backend & Authentication**: Supabase (PostgreSQL, RLS), secure cookie session refresh, email + password auth, and protected routes.
+- [ ] **Database Library Sync**: Transition personal library entries from client state to Supabase PostgreSQL database.
 - [ ] **Real Catalogue Data Integration**: Live external API integrations with AniList (anime/manga), TMDB (movies/series), and Open Library / Google Books (novels).
 - [ ] **Stats & Activity Timeline**: Reading and watch velocity tracking, completion timelines, monthly habit streaks, and annual reading/watching wrap-ups.

@@ -80,12 +80,14 @@ Do not change, replace or add to the stack (languages, frameworks, libraries, da
 - Provide clear feedback after actions, useful empty states, sensible loading and error states, and responsive layouts.
 - Keep touch targets comfortable but not oversized on small screens.
 - No eyebrow text, kicker labels, overlines or decorative micro-headings. Use clear, direct headings with meaningful supporting text.
+- Use `lucide-react` for all icons. No hand-written inline SVGs, except brand logos lucide doesn't provide (e.g. Google) and the app's own logo.
 
 ---
 
 ## Workflow
 
 - Implement what was requested. Verify with `npm run lint` and `npm run build`. For UI changes, also check the result in the browser at mobile and desktop widths, in light and dark mode.
+- Test interactive flows through real UI actions (clicks, form submits), not just by calling server actions or scripts directly. If you can't drive the browser, say so and give me manual steps instead of claiming it works.
 - End each task with a short report: what changed, any behavior differences, and anything you're unsure about. Don't claim something was tested if it wasn't.
 - Don't commit or push unless I ask. Don't touch `package.json` or lockfiles unless the task needs an approved dependency.
 - I develop on Windows (PowerShell), so prefer cross-platform commands.
