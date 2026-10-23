@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { signup, type AuthActionState } from "@/app/actions/auth";
 import { AlertCircle, Loader2, Mail } from "lucide-react";
+import PasswordInput from "./PasswordInput";
 
 const initialState: AuthActionState = {};
 
@@ -137,16 +138,14 @@ export default function SignupForm({ next }: SignupFormProps) {
             >
               Password
             </label>
-            <input
+            <PasswordInput
               id="password"
               name="password"
-              type="password"
               autoComplete="new-password"
               required
               placeholder="At least 8 characters"
               aria-describedby={state.errors?.password ? "password-error" : undefined}
               aria-invalid={Boolean(state.errors?.password)}
-              className="w-full rounded-xl border border-border bg-muted/40 px-3.5 py-2.5 text-sm text-foreground placeholder:text-subtle-foreground focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
             />
             {state.errors?.password ? (
               <p id="password-error" className="mt-1.5 text-xs text-red-600 dark:text-red-400">

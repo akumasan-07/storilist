@@ -11,15 +11,16 @@ export const metadata: Metadata = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string; reset?: string }>;
 }) {
-  const { next } = await searchParams;
+  const { next, reset } = await searchParams;
   const safeNext = sanitizeRedirectPath(next);
+  const resetSuccess = reset === "success";
 
   return (
     <div className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6">
       <Container>
-        <LoginForm next={safeNext} />
+        <LoginForm next={safeNext} resetSuccess={resetSuccess} />
       </Container>
     </div>
   );

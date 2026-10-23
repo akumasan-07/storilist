@@ -43,6 +43,8 @@ Create a `.env.local` file in the root directory (see `.env.example`):
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-project-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+# Canonical site origin (must be set in production, e.g. https://yourdomain.com)
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
 Apply migrations and catalogue seed data in Supabase following [supabase/README.md](supabase/README.md).

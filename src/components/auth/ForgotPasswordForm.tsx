@@ -1,0 +1,114 @@
+"use client";
+
+import { useActionState } from "react";
+import Link from "next/link";
+import { forgotPassword, type AuthActionState } from "@/app/actions/auth";
+import { AlertCircle, Loader2, Mail, ArrowLeft } from "lucide-react";
+
+const initialState: AuthActionState = {};
+
+export default function ForgotPasswordForm() {
+  const [state, formAction, isPending] = useActionState(
+    forgotPassword,
+    initialState
+  );
+
+  if (state.successMessage) {
+    return (
+      <div className="w-full max-w-md mx-auto">
+        <div className="rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-sm text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <Mail className="h-6 w-6" aria-hidden="true" />
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Check your email
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {state.successMessage}
+          </p>
+
+          <div className="mt-6 flex flex-col gap-3">
+            <Link
+              href="/login"
+              className="inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary-hover shadow-xs transition-colors min-h-[44px]"
+            >
+              Return to Log in
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full max-w-md mx-auto">
+      <div className="rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-sm">
+        <div className="mb-6 text-center">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Reset your password
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Enter the email address associated with your account and we&apos;ll send you a link to reset your password.
+          </p>
+        </div>
+
+        {state.errors?.general && (
+          <div
+            role="alert"
+            className="mb-6 flex items-start gap-3 rounded-xl border border-red-500/25 bg-red-500/10 p-3.5 text-sm text-red-700 dark:text-red-400"
+          >
+            <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" aria-hidden="true" />
+            <span>{state.errors.general[0]}</span>
+          </div>
+        )}
+
+        <form action={formAction} className="space-y-4">
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5"
+            >
+              Email address
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              defaultValue={state.values?.email || ""}
+              placeholder="you@example.com"
+              aria-describedby={state.errors?.email ? "email-error" : undefined}
+              aria-invalid={Boolean(state.errors?.email)}
+              className="w-full rounded-xl border border-border bg-muted/40 px-3.5 py-2.5 text-sm text-foreground placeholder:text-subtle-foreground focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
+            />
+            {state.errors?.email && (
+              <p id="email-error" className="mt-1.5 text-xs text-red-600 dark:text-red-400">
+                {state.errors.email[0]}
+              </p>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            disabled={isPending}
+            className="w-full mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary-hover shadow-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
+          >
+            {isPending && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+            <span>{isPending ? "Sending link..." : "Send reset link"}</span>
+          </button>
+        </form>
+
+        <div className="mt-6 text-center text-sm text-muted-foreground">
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-1.5 font-semibold text-primary hover:underline transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            <span>Back to Log in</span>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}

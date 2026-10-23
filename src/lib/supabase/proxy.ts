@@ -50,7 +50,16 @@ export async function updateSession(request: NextRequest) {
   }
 
   // 2. Already logged in users visiting /login or /signup -> redirect to /library
-  if (user && (pathname === "/login" || pathname === "/signup")) {
+  // Do not redirect if the user lands on /login after a password reset
+  const isResetSuccess =
+    pathname === "/login" &&
+    request.nextUrl.searchParams.get("reset") === "success";
+
+  if (
+    user &&
+    (pathname === "/login" || pathname === "/signup") &&
+    !isResetSuccess
+  ) {
     const url = request.nextUrl.clone();
     url.pathname = "/library";
     url.search = "";

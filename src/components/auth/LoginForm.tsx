@@ -1,17 +1,23 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
 import { login, type AuthActionState } from "@/app/actions/auth";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2, X } from "lucide-react";
+import PasswordInput from "./PasswordInput";
 
 const initialState: AuthActionState = {};
 
 interface LoginFormProps {
   next?: string;
+  resetSuccess?: boolean;
 }
 
-export default function LoginForm({ next }: LoginFormProps) {
+export default function LoginForm({
+  next,
+  resetSuccess = false,
+}: LoginFormProps) {
+  const [showResetNotice, setShowResetNotice] = useState(resetSuccess);
   const [state, formAction, isPending] = useActionState(login, initialState);
 
   const signupHref = next
@@ -29,6 +35,29 @@ export default function LoginForm({ next }: LoginFormProps) {
             Enter your email and password to access your personal library.
           </p>
         </div>
+
+        {showResetNotice && (
+          <div
+            role="status"
+            className="mb-6 flex items-start justify-between gap-3 rounded-xl border border-emerald-500/25 bg-emerald-500/10 p-3.5 text-sm text-emerald-800 dark:text-emerald-300"
+          >
+            <div className="flex items-start gap-3">
+              <CheckCircle2
+                className="h-5 w-5 shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400"
+                aria-hidden="true"
+              />
+              <span>Password updated. Log in with your new password.</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowResetNotice(false)}
+              className="shrink-0 -mr-1 -mt-1 rounded-lg p-1 text-emerald-700/70 hover:text-emerald-900 hover:bg-emerald-500/15 dark:text-emerald-400/70 dark:hover:text-emerald-200 cursor-pointer transition-colors"
+              aria-label="Dismiss notice"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+        )}
 
         {state.errors?.general && (
           <div
@@ -70,22 +99,28 @@ export default function LoginForm({ next }: LoginFormProps) {
           </div>
 
           <div>
-            <label
-              htmlFor="password"
-              className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5"
-            >
-              Password
-            </label>
-            <input
+            <div className="flex items-center justify-between mb-1.5">
+              <label
+                htmlFor="password"
+                className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+              >
+                Password
+              </label>
+              <Link
+                href="/forgot-password"
+                className="text-xs font-medium text-primary hover:underline transition-colors"
+              >
+                Forgot password?
+              </Link>
+            </div>
+            <PasswordInput
               id="password"
               name="password"
-              type="password"
               autoComplete="current-password"
               required
               placeholder="••••••••"
               aria-describedby={state.errors?.password ? "password-error" : undefined}
               aria-invalid={Boolean(state.errors?.password)}
-              className="w-full rounded-xl border border-border bg-muted/40 px-3.5 py-2.5 text-sm text-foreground placeholder:text-subtle-foreground focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
             />
             {state.errors?.password && (
               <p id="password-error" className="mt-1.5 text-xs text-red-600 dark:text-red-400">

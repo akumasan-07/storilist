@@ -1,11 +1,18 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
-import { loginSchema, signupSchema } from "@/lib/validation/auth";
+import {
+  loginSchema,
+  signupSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+} from "@/lib/validation/auth";
 import { sanitizeRedirectPath } from "@/lib/supabase/redirect";
+import { getSiteOrigin } from "@/lib/supabase/origin";
+import { RECOVERY_COOKIE_NAME } from "@/lib/supabase/recovery";
 
 export interface AuthActionState {
   errors?: {
@@ -102,10 +109,7 @@ export async function signup(
     };
   }
 
-  const headerList = await headers();
-  const host = headerList.get("host") || "localhost:3000";
-  const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
-  const origin = `${protocol}://${host}`;
+  const origin = await getSiteOrigin();
 
   const { data, error } = await supabase.auth.signUp({
     email: validation.data.email,
@@ -141,6 +145,94 @@ export async function signup(
   // If email confirmation is off, user is logged in immediately
   revalidatePath("/", "layout");
   redirect(targetPath);
+}
+
+export async function forgotPassword(
+  prevState: AuthActionState,
+  formData: FormData
+): Promise<AuthActionState> {
+  const email = String(formData.get("email") || "");
+
+  const validation = forgotPasswordSchema.safeParse({ email });
+  if (!validation.success) {
+    return {
+      errors: validation.error.flatten().fieldErrors,
+      values: { email },
+    };
+  }
+
+  const supabase = await createClient();
+  const origin = await getSiteOrigin();
+  const redirectTo = `${origin}/auth/callback?next=/reset-password`;
+
+  try {
+    await supabase.auth.resetPasswordForEmail(validation.data.email, {
+      redirectTo,
+    });
+  } catch (err) {
+    console.error("resetPasswordForEmail error:", err);
+  }
+
+  // Always show neutral success message without leaking account existence or raw errors
+  return {
+    successMessage:
+      "If an account exists for that email, we've sent a reset link.",
+    values: { email },
+  };
+}
+
+export async function resetPassword(
+  prevState: AuthActionState,
+  formData: FormData
+): Promise<AuthActionState> {
+  const password = String(formData.get("password") || "");
+
+  const validation = resetPasswordSchema.safeParse({ password });
+  if (!validation.success) {
+    return {
+      errors: validation.error.flatten().fieldErrors,
+    };
+  }
+
+  const cookieStore = await cookies();
+  const hasRecoveryMarker = Boolean(
+    cookieStore.get(RECOVERY_COOKIE_NAME)?.value
+  );
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user || !hasRecoveryMarker) {
+    return {
+      errors: {
+        general: [
+          "This reset link is invalid or has expired. Please request a new link.",
+        ],
+      },
+    };
+  }
+
+  const { error } = await supabase.auth.updateUser({
+    password: validation.data.password,
+  });
+
+  if (error) {
+    console.error("updateUser password error:", error);
+    return {
+      errors: {
+        general: [
+          "Unable to update your password. Please try again or request a new link.",
+        ],
+      },
+    };
+  }
+
+  cookieStore.delete(RECOVERY_COOKIE_NAME);
+  await supabase.auth.signOut({ scope: "global" });
+  revalidatePath("/", "layout");
+  redirect("/login?reset=success");
 }
 
 export async function logout() {

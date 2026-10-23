@@ -38,6 +38,27 @@ export const signupSchema = z.object({
 
 export type SignupInput = z.infer<typeof signupSchema>;
 
+export const forgotPasswordSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required")
+    .email("Please enter a valid email address"),
+});
+
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = z.object({
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .refine((val) => encoder.encode(val).length <= 72, {
+      message: "Password cannot exceed 72 bytes",
+    }),
+});
+
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+
 // Backwards-compatible aliases
 export const authSchema = loginSchema;
 export type AuthInput = LoginInput;
