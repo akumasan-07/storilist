@@ -3,9 +3,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import Container from "@/components/Container";
-import { getMediaById, getRelatedMedia } from "@/lib/db/media";
+import { getMediaById, getRelatedMedia, upsertMediaFromProvider } from "@/lib/db/media";
 import { getUserLibraryItems } from "@/lib/db/library";
 import { createClient } from "@/lib/supabase/server";
+import { parseMediaId, fetchMediaFromProvider } from "@/lib/providers";
+import { MediaItem } from "@/types/media";
 import LibrarySync from "@/components/LibrarySync";
 import TitleHero from "@/components/title/TitleHero";
 import TitleSidebar from "@/components/title/TitleSidebar";
@@ -16,9 +18,51 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
+/**
+ * Resolves media by ID:
+ * 1. Database catalogue first.
+ * 2. If database row exists with source and is older than 30 days, refreshes best-effort in the background.
+ * 3. If missing from DB and ID conforms to a valid provider format, fetches from provider for display (read-only, no write).
+ * 4. Returns null on invalid ID or provider failure (no leaked provider errors).
+ */
+async function resolveTitleMedia(id: string): Promise<MediaItem | null> {
+  const dbMedia = await getMediaById(id);
+
+  if (dbMedia) {
+    if (dbMedia.source && dbMedia.fetchedAt) {
+      const fetchedTime = new Date(dbMedia.fetchedAt).getTime();
+      const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+      if (Date.now() - fetchedTime > thirtyDaysMs) {
+        // Best-effort background refresh (never fail or slow down the response)
+        fetchMediaFromProvider(dbMedia.id)
+          .then((fresh) => {
+            if (fresh) return upsertMediaFromProvider(fresh);
+          })
+          .catch((err) => {
+            console.error("Best-effort media refresh failed:", err);
+          });
+      }
+    }
+    return dbMedia;
+  }
+
+  const parsed = parseMediaId(id);
+  if (!parsed) {
+    return null;
+  }
+
+  try {
+    const providerMedia = await fetchMediaFromProvider(id);
+    return providerMedia;
+  } catch (error) {
+    console.error("Failed to fetch provider media:", error);
+    return null;
+  }
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
-  const media = await getMediaById(id);
+  const media = await resolveTitleMedia(id);
 
   if (!media) {
     return {
@@ -27,20 +71,22 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
+  const description = media.synopsis ? media.synopsis.slice(0, 160) : undefined;
+
   return {
     title: `${media.title} (${media.category}) | StoriList`,
-    description: media.synopsis.slice(0, 160),
+    description,
     openGraph: {
       title: `${media.title} | StoriList`,
-      description: media.synopsis.slice(0, 160),
-      images: [media.poster],
+      description,
+      images: media.poster ? [media.poster] : [],
     },
   };
 }
 
 export default async function TitleDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const media = await getMediaById(id);
+  const media = await resolveTitleMedia(id);
 
   if (!media) {
     notFound();
@@ -84,7 +130,7 @@ export default async function TitleDetailPage({ params }: PageProps) {
             <div className="rounded-3xl border border-border bg-card p-6 shadow-xs">
               <h2 className="text-base font-bold text-foreground">Synopsis</h2>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                {media.synopsis}
+                {media.synopsis || "No synopsis available for this title."}
               </p>
             </div>
 

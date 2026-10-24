@@ -48,6 +48,9 @@ export function formatYear(media: {
   endYear: number | null;
   releaseStatus?: string;
 }): string {
+  if (!media.startYear || media.startYear === 0) {
+    return "";
+  }
   if (media.endYear === null) {
     return media.releaseStatus === "Ongoing"
       ? `${media.startYear}–Present`

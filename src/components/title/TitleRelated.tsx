@@ -41,13 +41,21 @@ export default function TitleRelated({ media, relatedMedia }: TitleRelatedProps)
           >
             <div>
               <div className="relative aspect-[2/3] w-full overflow-hidden rounded-xl bg-muted shadow-inner">
-                <Image
-                  src={rel.poster}
-                  alt={rel.title}
-                  fill
-                  sizes="(max-width: 640px) 50vw, 25vw"
-                  className="object-cover transition-transform duration-300 group-hover:scale-105"
-                />
+                {rel.poster ? (
+                  <Image
+                    src={rel.poster}
+                    alt={rel.title}
+                    fill
+                    sizes="(max-width: 640px) 50vw, 25vw"
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-muted/80 p-2 text-center">
+                    <span className="text-[11px] font-medium text-muted-foreground line-clamp-3">
+                      {rel.title}
+                    </span>
+                  </div>
+                )}
                 <div
                   aria-hidden="true"
                   className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/60 to-transparent"

@@ -1,5 +1,7 @@
 import type { MediaCategory } from "./library";
 
+export type MediaSource = "tmdb" | "mal" | "openlibrary";
+
 export interface MediaItem {
   id: string;
   title: string;
@@ -17,4 +19,7 @@ export interface MediaItem {
   releaseStatus: "Completed" | "Ongoing";
   creators?: string[];
   tagline?: string;
+  source?: MediaSource | null;
+  externalId?: string | null;
+  fetchedAt?: string | null;
 }

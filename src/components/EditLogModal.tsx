@@ -176,13 +176,19 @@ function EditLogModalDialog({
         <div className="shrink-0 flex items-start justify-between border-b border-border bg-muted/30 p-4 sm:p-5">
           <div className="flex items-center gap-3.5 min-w-0">
             <div className="relative aspect-[2/3] w-11 sm:w-12 shrink-0 overflow-hidden rounded-lg bg-muted shadow-sm">
-              <Image
-                src={media.poster}
-                alt={media.title}
-                fill
-                sizes="48px"
-                className="object-cover"
-              />
+              {media.poster ? (
+                <Image
+                  src={media.poster}
+                  alt={media.title}
+                  fill
+                  sizes="48px"
+                  className="object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-muted/80 text-[10px] text-muted-foreground">
+                  No Poster
+                </div>
+              )}
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 mb-1">

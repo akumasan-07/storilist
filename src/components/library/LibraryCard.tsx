@@ -32,13 +32,21 @@ export default function LibraryCard({ item, onOpenLogModal }: LibraryCardProps) 
           aria-label={`View details for ${item.media.title}`}
         >
           <div className="relative aspect-[2/3] w-full overflow-hidden rounded-xl bg-muted shadow-inner">
-            <Image
-              src={item.media.poster}
-              alt={item.media.title}
-              fill
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-            />
+            {item.media.poster ? (
+              <Image
+                src={item.media.poster}
+                alt={item.media.title}
+                fill
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                className="object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-muted/80 p-3 text-center">
+                <span className="text-xs font-medium text-muted-foreground line-clamp-3">
+                  {item.media.title}
+                </span>
+              </div>
+            )}
 
             {/* Gradient shade at bottom for contrast */}
             <div

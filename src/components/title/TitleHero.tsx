@@ -42,14 +42,23 @@ export default function TitleHero({ media, trackingSlot }: TitleHeroProps) {
         {/* 2:3 Vertical Poster */}
         <div className="w-40 sm:w-56 md:w-64 shrink-0 mx-auto md:mx-0">
           <div className="relative aspect-[2/3] w-full overflow-hidden rounded-2xl border border-border bg-muted shadow-md">
-            <Image
-              src={media.poster}
-              alt={media.title}
-              fill
-              priority
-              sizes="(max-width: 640px) 160px, (max-width: 768px) 224px, 256px"
-              className="object-cover"
-            />
+            {media.poster ? (
+              <Image
+                src={media.poster}
+                alt={media.title}
+                fill
+                priority
+                sizes="(max-width: 640px) 160px, (max-width: 768px) 224px, 256px"
+                className="object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full flex-col items-center justify-center bg-muted/80 p-4 text-center">
+                <CategoryIcon className="h-10 w-10 text-muted-foreground/50 mb-2" aria-hidden="true" />
+                <span className="text-xs font-medium text-muted-foreground line-clamp-3">
+                  {media.title}
+                </span>
+              </div>
+            )}
 
             {/* Top-Right Category Badge */}
             <div className="absolute top-2.5 right-2.5 max-w-[50%]">

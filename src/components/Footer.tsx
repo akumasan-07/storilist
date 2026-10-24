@@ -25,9 +25,16 @@ export default function Footer() {
             <span>—</span>
             <span>Anime, Comics, Movies, Series &amp; Novels in one place</span>
           </div>
-          <p className="text-xs text-subtle-foreground">
-            &copy; {new Date().getFullYear()} StoriList. Personal Media Tracker.
-          </p>
+          <div className="flex items-center gap-3 text-xs text-subtle-foreground">
+            <Link
+              href="/about"
+              className="hover:text-foreground transition-colors underline-offset-4 hover:underline"
+            >
+              About &amp; Credits
+            </Link>
+            <span aria-hidden="true">&bull;</span>
+            <p>&copy; {new Date().getFullYear()} StoriList. Personal Media Tracker.</p>
+          </div>
         </div>
       </Container>
     </footer>

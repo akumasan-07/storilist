@@ -1,7 +1,13 @@
 import { z } from "zod";
 
+export const mediaIdSchema = z
+  .string()
+  .trim()
+  .min(1, "Media ID is required")
+  .max(100, "Media ID is too long");
+
 export const libraryEntryInputSchema = z.object({
-  mediaId: z.string().trim().min(1, "Media ID is required"),
+  mediaId: mediaIdSchema,
   status: z.enum(["Planned", "In Progress", "Completed", "Dropped"]),
   currentProgress: z
     .number()
