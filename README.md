@@ -1,6 +1,12 @@
-# StoriList
+<p align="center">
+  <img src="public/logo.png" alt="StoriList Logo" width="128" height="128" style="border-radius: 24px;" />
+</p>
 
-A unified cross-medium narrative tracking platform designed for tracking **Anime**, **Comics / Manga**, **Movies**, **Series**, and **Novels** in one cohesive personal library.
+<h1 align="center">StoriList</h1>
+
+<p align="center">
+  A unified cross-medium narrative tracking platform designed for tracking <strong>Anime</strong>, <strong>Comics / Manga</strong>, <strong>Movies</strong>, <strong>Series</strong>, and <strong>Novels</strong> in one cohesive personal library.
+</p>
 
 ---
 

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Menu, X, User, LogOut, ChevronDown } from "lucide-react";
@@ -68,9 +69,14 @@ export default function Navbar({ user }: NavbarProps) {
               onClick={() => setMobileMenuOpen(false)}
               className="flex items-center gap-2.5 font-bold tracking-tight text-foreground transition-opacity hover:opacity-90"
             >
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-extrabold shadow-sm shadow-primary/30">
-                SL
-              </span>
+              <Image
+                src="/lettermark.png"
+                alt=""
+                width={32}
+                height={32}
+                className="h-8 w-8 rounded-lg object-contain"
+                priority
+              />
               <span className="text-xl font-semibold tracking-tight text-foreground">
                 Stori<span className="text-primary">List</span>
               </span>

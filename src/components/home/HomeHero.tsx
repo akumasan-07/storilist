@@ -16,7 +16,7 @@ export default function HomeHero() {
       {/* Controlled ambient background glow */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 -top-20 -z-10 flex justify-center overflow-hidden"
+        className="pointer-events-none absolute inset-x-0 -top-20 -z-10 flex justify-center"
       >
         <div className="h-[360px] w-[720px] max-w-full rounded-full bg-primary/10 blur-[100px] dark:bg-primary/15" />
       </div>

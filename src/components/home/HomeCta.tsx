@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Compass, Library } from "lucide-react";
 import Container from "@/components/Container";
 
@@ -14,10 +15,14 @@ export default function HomeCta() {
           />
 
           <div className="mx-auto max-w-2xl">
-            {/* Brand emblem */}
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground font-extrabold shadow-sm shadow-primary/30">
-              SL
-            </div>
+            {/* Brand logo */}
+            <Image
+              src="/logo.png"
+              alt="StoriList"
+              width={112}
+              height={112}
+              className="mx-auto h-24 w-24 sm:h-28 sm:w-28 rounded-3xl object-contain shadow-md"
+            />
 
             <h2 className="mt-5 text-xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-foreground break-words">
               Ready to organize your entire media universe?

@@ -17,7 +17,12 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+  ? process.env.NEXT_PUBLIC_SITE_URL.replace(/\/+$/, "")
+  : "http://localhost:3000";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "StoriList — Unified Media Tracking",
   description:
     "Track anime, comics, movies, series, and novels in one unified personal library.",
