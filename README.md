@@ -1,90 +1,126 @@
-<p align="center">
-  <img src="public/logo.png" alt="StoriList Logo" width="128" height="128" style="border-radius: 24px;" />
-</p>
-
 <h1 align="center">StoriList</h1>
 
 <p align="center">
-  A unified cross-medium narrative tracking platform designed for tracking <strong>Anime</strong>, <strong>Comics / Manga</strong>, <strong>Movies</strong>, <strong>Series</strong>, and <strong>Novels</strong> in one cohesive personal library.
+  One personal library for everything you watch and read: <strong>anime</strong>, <strong>comics</strong>, <strong>movies</strong>, <strong>series</strong> and <strong>novels</strong>.
 </p>
 
----
+<p align="center">
+  <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs" />
+  <img alt="React" src="https://img.shields.io/badge/React-19-149eca?logo=react&logoColor=white" />
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript&logoColor=white" />
+  <img alt="Supabase" src="https://img.shields.io/badge/Supabase-PostgreSQL-3ecf8e?logo=supabase&logoColor=white" />
+  <img alt="Tailwind CSS" src="https://img.shields.io/badge/Tailwind-v4-38bdf8?logo=tailwindcss&logoColor=white" />
+</p>
 
-## Features Implemented
+<p align="center">
+  <a href="https://storilist.vercel.app/"><strong>Live demo</strong></a>
+</p>
 
-- **Unified Cross-Medium Library**: Track works across five narrative mediums with format-specific progress units (episodes, chapters, runtime minutes, pages).
-- **Personal Log & Status Management**: Manage tracking statuses (*Planned*, *In Progress*, *Completed*, *Dropped*), precision decimal ratings (1–10), progress steppers, and personal notes.
-- **Database-Backed Personal Library**: User library entries and catalogue stored in Supabase PostgreSQL with Row Level Security (RLS), optimistic updates, automatic rollback on error, and server-side ownership checks.
-- **Authentication & Profiles**: Secure email + password authentication, required unique usernames with case-insensitive validation, secure cookie-based session management, and account dropdown in the Navbar.
-- **Dynamic Discovery & Search**: Instant multi-attribute search and filtering across mediums, formats, and genres.
-- **Deep-Linked URL State**: Filter and search states in Discover sync seamlessly with browser URL query parameters (`q`, `category`, `genre`, `sort`) with debounced updating, browser history navigation support, and zero scroll jump.
-- **Server-Rendered Title Pages**: Server Component title pages featuring dynamic metadata generation, instant skeleton loading states, related titles, and robust 404 (`notFound()`) and error handling boundaries.
-- **Accessible & Responsive Design**: Dark/light theme support, accessible modal dialogs, keyboard navigation (`Escape` closing), and click-outside dismissal.
+<!--
+Screenshots: add images to docs/screenshots/ and uncomment.
 
----
+## Screenshots
+
+| Discover | Library |
+| --- | --- |
+| ![Discover](docs/screenshots/discover.png) | ![Library](docs/screenshots/library.png) |
+-->
+
+## Why StoriList
+
+Tracking apps usually cover one medium. StoriList keeps anime, comics, movies, series and novels in a single library, each with progress that fits the format (episodes, chapters, volumes or minutes), plus a status, a 1-10 rating and personal notes.
+
+It's a non-commercial personal project built for a small group of friends and family.
+
+## Features
+
+- **Unified library:** five media categories, four statuses (Planned, In Progress, Completed, Dropped), progress steppers, 1-10 ratings and notes.
+- **Accounts:** email and password sign-up with unique usernames, password reset, protected routes and cookie-based sessions.
+- **Database-backed:** library data lives in PostgreSQL with Row-Level Security. The UI updates optimistically and rolls back with a message if a save fails.
+- **Discover:** search and filter by category, format and genre. Filters live in the URL, so views can be bookmarked and shared.
+- **Live TMDB titles:** any TMDB movie or series opens as a full title page and can be tracked. The server saves a title to the catalogue only when a user tracks it.
+- **Title pages:** server-rendered with per-title metadata, related titles, loading skeletons and proper 404 and error pages.
+- **Polish:** responsive layout, light and dark themes, accessible dialogs and menus, and a social share preview image.
 
 ## Tech Stack
 
-- **Framework**: [Next.js 16](https://nextjs.org/) (App Router, Turbopack)
-- **Library**: [React 19](https://react.dev/)
-- **Database & Auth**: [Supabase](https://supabase.com/) (PostgreSQL, Row Level Security, Auth via `@supabase/ssr` & `@supabase/supabase-js`)
-- **Validation**: [Zod](https://zod.dev/)
-- **Language**: [TypeScript](https://www.typescriptlang.org/)
-- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
-- **Icons**: [Lucide React](https://lucide.dev/)
+| Area | Technology |
+| --- | --- |
+| Framework | Next.js 16 (App Router), React 19 |
+| Language | TypeScript |
+| Database and auth | Supabase (PostgreSQL, Auth, Row-Level Security) via `@supabase/ssr` |
+| Validation | Zod |
+| Styling | Tailwind CSS v4, lucide-react |
+| Data sources | TMDB API (more in the roadmap) |
+| Hosting | Vercel |
 
----
+## How It Works
+
+- **Data model:** `media` holds the catalogue, `library_entries` holds one row per user per title, and `profiles` extends `auth.users`. Entries store only user data (status, progress, rating, notes) and are joined with `media` for display.
+- **Security:** Row-Level Security limits every user to their own entries. The catalogue is read-only to clients, and only server code can write to it, using a service-role key that never reaches the browser.
+- **Writes:** all changes go through Server Actions. Input is validated with Zod, the user comes from the verified session (never from the client), and library rules such as status normalization run on the server.
+- **External titles:** the client sends only a title ID such as `tmdb-movie-27205`. The server validates it, fetches the data from the provider, saves it, and then creates the user's entry. The client never supplies catalogue data.
+- **Caching:** provider requests use Next.js fetch revalidation, and saved titles are refreshed in the background once they're older than 30 days.
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18.17+ or later
-- npm (or yarn / pnpm / bun)
+- Node.js 20.9 or later
+- A free [Supabase](https://supabase.com/) project
+- A [TMDB](https://www.themoviedb.org/) API read access token
 
-### Environment Variables
+### Setup
 
-Create a `.env.local` file in the root directory (see `.env.example`):
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=your-supabase-project-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
-# Canonical site origin (must be set in production, e.g. https://yourdomain.com)
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
-
-# Server-only secrets (never expose to client or use NEXT_PUBLIC_ prefix)
-SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
-TMDB_READ_ACCESS_TOKEN=your-tmdb-v4-read-access-token
-```
-
-Apply migrations and catalogue seed data in Supabase following [supabase/README.md](supabase/README.md).
-
-### Installation & Run
-
-1. Install dependencies:
+1. Clone the repo and install dependencies:
    ```bash
+   git clone https://github.com/akumasan-07/storilist.git
+   cd storilist
    npm install
    ```
-
-2. Start the local development server:
+2. In the Supabase SQL Editor, run every file in `supabase/migrations/` in order (see [supabase/README.md](supabase/README.md)).
+3. In Supabase, open **Authentication → URL Configuration**. Set the Site URL to `http://localhost:3000` and add `http://localhost:3000/**` to the Redirect URLs.
+4. Copy `.env.example` to `.env.local` and fill in the values below.
+5. Start the dev server and open [http://localhost:3000](http://localhost:3000):
    ```bash
    npm run dev
    ```
 
-3. Open [http://localhost:3000](http://localhost:3000) in your browser.
+### Environment Variables
 
-### Available Scripts
+| Variable | Description | Secret |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | No |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase publishable (anon) key | No |
+| `NEXT_PUBLIC_SITE_URL` | Canonical site URL, used in auth emails (set it in production) | No |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase secret key, server-only, used to save provider titles | **Yes** |
+| `TMDB_READ_ACCESS_TOKEN` | TMDB v4 read access token, server-only | **Yes** |
 
-- `npm run dev` — Launch the local development server.
-- `npm run build` — Create an optimized production build.
-- `npm run start` — Run the compiled production server.
-- `npm run lint` — Run ESLint across the codebase.
+Never commit `.env.local`, and never prefix secrets with `NEXT_PUBLIC_`.
 
----
+### Scripts
+
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Start the development server |
+| `npm run build` | Create a production build |
+| `npm run start` | Run the production build |
+| `npm run lint` | Run ESLint |
+
+## Deployment
+
+Deploy on [Vercel](https://vercel.com/) and add the same environment variables, with `NEXT_PUBLIC_SITE_URL` set to your production URL. Redeploy after changing any variable. Then add the production URL to Supabase under **Authentication → URL Configuration** (Site URL, plus `https://your-domain/**` in the Redirect URLs).
 
 ## Roadmap
 
-- [x] **Backend & Authentication**: Supabase (PostgreSQL, RLS), secure cookie session refresh, email + password auth, username validation, and protected routes.
-- [x] **Database Library Sync**: Transition personal library entries and catalogue to Supabase PostgreSQL database with Server Actions and optimistic updates.
-- [ ] **Real Catalogue Data Integration**: Live external API integrations with AniList (anime/manga), TMDB (movies/series), and Open Library / Google Books (novels).
-- [ ] **Stats & Activity Timeline**: Reading and watch velocity tracking, completion timelines, monthly habit streaks, and annual reading/watching wrap-ups.
+- [x] Authentication, usernames and password reset
+- [x] Database-backed library with Row-Level Security and server-side validation
+- [x] TMDB title pages and tracking (movies and series)
+- [x] Discover powered by live TMDB data (popular titles and search)
+- [ ] MyAnimeList integration (anime, manga and manhwa)
+- [ ] Open Library integration (novels)
+- [ ] Stats and activity timeline
+
+## Credits
+
+This product uses the TMDB API but is not endorsed or certified by TMDB. Anime and manga data will come from the MyAnimeList API and novel data from Open Library. Attribution for each source is on the app's About page.

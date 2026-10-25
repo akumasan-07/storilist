@@ -71,6 +71,7 @@ Do not change, replace or add to the stack (languages, frameworks, libraries, da
 - Secrets live only in `.env.local`. Keep a `.env.example` with no real values.
 - Schema changes are new numbered files in `supabase/migrations/`. Never edit an applied migration.
 - Avoid Supabase-only extras (Realtime, Storage, Edge Functions) unless a feature genuinely needs them, to keep a future database switch cheap.
+- Provider API keys and the Supabase service-role key are server-only. The client never sends catalogue metadata, only IDs; the server fetches the data from the provider and writes it. Follow each provider's attribution and caching terms (see the About page).
 
 ---
 
