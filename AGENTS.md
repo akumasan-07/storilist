@@ -92,3 +92,4 @@ Do not change, replace or add to the stack (languages, frameworks, libraries, da
 - End each task with a short report: what changed, any behavior differences, and anything you're unsure about. Don't claim something was tested if it wasn't.
 - Don't commit or push unless I ask. Don't touch `package.json` or lockfiles unless the task needs an approved dependency.
 - I develop on Windows (PowerShell), so prefer cross-platform commands.
+- Client components must never import server-only modules (`src/lib/providers`, `src/lib/db`, `src/lib/supabase/server` or `admin`). Constants needed by both sides live in a client-safe module (e.g. `src/lib/discover.ts`). A passing build and HTTP 200 don't prove the page works: after changes that touch imports, load the affected pages and check the browser console, or say you couldn't.

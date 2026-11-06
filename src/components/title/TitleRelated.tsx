@@ -32,7 +32,7 @@ export default function TitleRelated({ media, relatedMedia }: TitleRelatedProps)
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-5">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-6 sm:gap-4">
         {relatedMedia.map((rel) => (
           <Link
             key={rel.id}
@@ -46,7 +46,7 @@ export default function TitleRelated({ media, relatedMedia }: TitleRelatedProps)
                     src={rel.poster}
                     alt={rel.title}
                     fill
-                    sizes="(max-width: 640px) 50vw, 25vw"
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
                   />
                 ) : (
@@ -60,11 +60,13 @@ export default function TitleRelated({ media, relatedMedia }: TitleRelatedProps)
                   aria-hidden="true"
                   className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/60 to-transparent"
                 />
-                <div className="absolute top-2 left-2 max-w-[60%]">
-                  <span className="block truncate rounded-md bg-black/65 px-1.5 py-0.5 text-[10px] font-semibold text-white/95 backdrop-blur-xs shadow-xs">
-                    {formatYear(rel)}
-                  </span>
-                </div>
+                {formatYear(rel) ? (
+                  <div className="absolute top-2 left-2 max-w-[60%]">
+                    <span className="block truncate rounded-md bg-black/65 px-1.5 py-0.5 text-[10px] font-semibold text-white/95 backdrop-blur-xs shadow-xs">
+                      {formatYear(rel)}
+                    </span>
+                  </div>
+                ) : null}
               </div>
 
               <div className="mt-2.5">
@@ -80,7 +82,7 @@ export default function TitleRelated({ media, relatedMedia }: TitleRelatedProps)
             <div className="mt-2 flex items-center justify-between border-t border-border-subtle pt-2 text-[11px]">
               <div className="flex items-center gap-1 font-bold text-foreground">
                 <Star className="h-3 w-3 fill-rating text-rating" aria-hidden="true" />
-                <span>{rel.rating.toFixed(1)}</span>
+                <span>{rel.rating > 0 ? rel.rating.toFixed(1) : "—"}</span>
               </div>
               <span className="text-[10px] text-subtle-foreground">{rel.format}</span>
             </div>

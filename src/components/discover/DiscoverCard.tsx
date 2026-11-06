@@ -29,13 +29,21 @@ export default function DiscoverCard({
           aria-label={`View details for ${item.title}`}
         >
           <div className="relative aspect-[2/3] w-full overflow-hidden rounded-xl bg-muted shadow-inner">
-            <Image
-              src={item.poster}
-              alt={item.title}
-              fill
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-            />
+            {item.poster ? (
+              <Image
+                src={item.poster}
+                alt={item.title}
+                fill
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                className="object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-muted/80 p-2 text-center">
+                <span className="text-[11px] font-medium text-muted-foreground line-clamp-3">
+                  {item.title}
+                </span>
+              </div>
+            )}
 
             {/* Gradient shade at bottom for contrast */}
             <div
@@ -44,11 +52,13 @@ export default function DiscoverCard({
             />
 
             {/* Year Tag (Top-Left) */}
-            <div className="absolute top-2 left-2 max-w-[48%]">
-              <span className="block truncate rounded-md bg-black/65 px-1.5 py-0.5 text-[10px] font-semibold text-white/95 backdrop-blur-xs shadow-xs">
-                {formatYear(item)}
-              </span>
-            </div>
+            {formatYear(item) ? (
+              <div className="absolute top-2 left-2 max-w-[48%]">
+                <span className="block truncate rounded-md bg-black/65 px-1.5 py-0.5 text-[10px] font-semibold text-white/95 backdrop-blur-xs shadow-xs">
+                  {formatYear(item)}
+                </span>
+              </div>
+            ) : null}
 
             {/* Category Badge (Top-Right) */}
             <div className="absolute top-2 right-2 max-w-[48%]">
@@ -103,7 +113,9 @@ export default function DiscoverCard({
       <div className="mt-2.5 sm:mt-3 flex items-center justify-between border-t border-border-subtle pt-2 sm:pt-2.5 text-xs gap-1.5">
         <div className="flex items-center gap-1 shrink-0">
           <Star className="h-3.5 w-3.5 fill-rating text-rating" aria-hidden="true" />
-          <span className="font-bold text-foreground text-xs">{item.rating.toFixed(1)}</span>
+          <span className="font-bold text-foreground text-xs">
+            {item.rating > 0 ? item.rating.toFixed(1) : "—"}
+          </span>
         </div>
 
         <button

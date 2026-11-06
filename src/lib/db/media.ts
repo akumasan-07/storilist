@@ -50,21 +50,6 @@ export function mapMediaRowToItem(row: MediaRow): MediaItem {
   };
 }
 
-export async function getAllMedia(): Promise<MediaItem[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("media")
-    .select("*")
-    .order("rating", { ascending: false });
-
-  if (error || !data) {
-    console.error("Failed to fetch media catalogue:", error);
-    return [];
-  }
-
-  return (data as MediaRow[]).map(mapMediaRowToItem);
-}
-
 export async function getMediaById(id: string): Promise<MediaItem | null> {
   if (!id) return null;
 
@@ -80,28 +65,6 @@ export async function getMediaById(id: string): Promise<MediaItem | null> {
   }
 
   return mapMediaRowToItem(data as MediaRow);
-}
-
-export async function getRelatedMedia(
-  category: MediaCategory,
-  excludeId: string,
-  limit: number = 4
-): Promise<MediaItem[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("media")
-    .select("*")
-    .eq("category", category)
-    .neq("id", excludeId)
-    .order("rating", { ascending: false })
-    .limit(limit);
-
-  if (error || !data) {
-    console.error("Failed to fetch related media:", error);
-    return [];
-  }
-
-  return (data as MediaRow[]).map(mapMediaRowToItem);
 }
 
 /**

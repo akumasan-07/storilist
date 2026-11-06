@@ -11,9 +11,10 @@ import { useRouter } from "next/navigation";
 import { AlertCircle, X } from "lucide-react";
 import { LibraryEntry, LibraryItem } from "@/types/library";
 import { MediaItem } from "@/types/media";
-import { normalizeEntry } from "@/lib/library";
+import { normalizeEntry, createEntryFromMedia } from "@/lib/library";
 import {
   saveLibraryEntryAction,
+  quickTrackAction,
   removeLibraryEntryAction,
 } from "@/app/actions/library";
 import { sanitizeRedirectPath } from "@/lib/supabase/redirect";
@@ -22,6 +23,7 @@ interface LibraryContextType {
   entries: LibraryEntry[];
   libraryItems: LibraryItem[];
   saveEntry: (entry: LibraryEntry, media?: MediaItem) => Promise<boolean>;
+  quickTrack: (item: MediaItem) => Promise<boolean>;
   removeEntry: (mediaId: string) => Promise<boolean>;
   getEntry: (mediaId: string) => LibraryEntry | undefined;
   getItem: (mediaId: string) => LibraryItem | undefined;
@@ -118,7 +120,7 @@ export function LibraryProvider({
           setItems((prev) =>
             prev.map((i) =>
               i.mediaId === result.data!.mediaId
-                ? { ...i, ...result.data!, media: itemMedia }
+                ? { ...i, ...result.data!, media: result.data!.media || itemMedia }
                 : i
             )
           );
@@ -127,6 +129,62 @@ export function LibraryProvider({
       } catch {
         setItems(previousItems);
         setError("An unexpected error occurred while saving your entry.");
+        return false;
+      }
+    },
+    [isAuthenticated, items, router]
+  );
+
+  const quickTrack = useCallback(
+    async (item: MediaItem): Promise<boolean> => {
+      if (!isAuthenticated) {
+        const currentPath =
+          typeof window !== "undefined"
+            ? window.location.pathname + window.location.search
+            : "/discover";
+        const target = sanitizeRedirectPath(currentPath);
+        router.push(`/login?next=${encodeURIComponent(target)}`);
+        return false;
+      }
+
+      const optimisticEntry = createEntryFromMedia(item);
+      const optimisticItem: LibraryItem = {
+        ...optimisticEntry,
+        media: item,
+        addedAt: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
+      };
+
+      const previousItems = items;
+
+      // Optimistic addition
+      setItems((prev) => {
+        const exists = prev.some((i) => i.mediaId === item.id);
+        if (exists) return prev;
+        return [optimisticItem, ...prev];
+      });
+      setError(null);
+
+      try {
+        const result = await quickTrackAction(item.id);
+
+        if (!result.success || !result.data) {
+          setItems(previousItems);
+          setError(result.error || "Failed to track title. Please try again.");
+          return false;
+        }
+
+        setItems((prev) =>
+          prev.map((i) =>
+            i.mediaId === result.data!.mediaId
+              ? { ...i, ...result.data!, media: result.data!.media || item }
+              : i
+          )
+        );
+        return true;
+      } catch {
+        setItems(previousItems);
+        setError("An unexpected error occurred while tracking this title.");
         return false;
       }
     },
@@ -212,6 +270,7 @@ export function LibraryProvider({
       entries,
       libraryItems: items,
       saveEntry,
+      quickTrack,
       removeEntry,
       getEntry,
       getItem,
@@ -224,6 +283,7 @@ export function LibraryProvider({
       entries,
       items,
       saveEntry,
+      quickTrack,
       removeEntry,
       getEntry,
       getItem,

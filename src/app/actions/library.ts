@@ -10,8 +10,12 @@ import {
 import { getMediaById, upsertMediaFromProvider } from "@/lib/db/media";
 import { upsertLibraryEntry, deleteLibraryEntry } from "@/lib/db/library";
 import { normalizeEntry } from "@/lib/library";
-import { parseMediaId, fetchMediaFromProvider } from "@/lib/providers";
-import { LibraryEntry } from "@/types/library";
+import {
+  parseMediaId,
+  fetchMediaFromProvider,
+  TmdbUnavailableError,
+} from "@/lib/providers";
+import { LibraryItem } from "@/types/library";
 import { MediaItem } from "@/types/media";
 
 export interface LibraryActionResult<T = undefined> {
@@ -46,7 +50,7 @@ async function ensureMediaInCatalogue(mediaId: string): Promise<MediaItem | null
 
 export async function saveLibraryEntryAction(
   input: LibraryEntryInput
-): Promise<LibraryActionResult<LibraryEntry>> {
+): Promise<LibraryActionResult<LibraryItem>> {
   const parsed = libraryEntryInputSchema.safeParse(input);
   if (!parsed.success) {
     const firstError = Object.values(parsed.error.flatten().fieldErrors)[0]?.[0];
@@ -68,11 +72,23 @@ export async function saveLibraryEntryAction(
     };
   }
 
-  const media = await ensureMediaInCatalogue(parsed.data.mediaId);
+  let media: MediaItem | null = null;
+  try {
+    media = await ensureMediaInCatalogue(parsed.data.mediaId);
+  } catch (err) {
+    if (err instanceof TmdbUnavailableError) {
+      return {
+        success: false,
+        error: "Couldn't reach TMDB right now. Please try again.",
+      };
+    }
+    throw err;
+  }
+
   if (!media) {
     return {
       success: false,
-      error: "Media item does not exist in the catalogue.",
+      error: "This title could not be found.",
     };
   }
 
@@ -107,12 +123,13 @@ export async function saveLibraryEntryAction(
     });
 
     revalidatePath("/library");
-    revalidatePath(`/title/${normalized.mediaId}`);
-    revalidatePath("/discover");
 
     return {
       success: true,
-      data: entry,
+      data: {
+        ...entry,
+        media,
+      },
     };
   } catch (error) {
     console.error("saveLibraryEntryAction error:", error);
@@ -125,7 +142,7 @@ export async function saveLibraryEntryAction(
 
 export async function quickTrackAction(
   mediaId: string
-): Promise<LibraryActionResult<LibraryEntry>> {
+): Promise<LibraryActionResult<LibraryItem>> {
   const parsed = mediaIdSchema.safeParse(mediaId);
   if (!parsed.success) {
     return {
@@ -146,11 +163,23 @@ export async function quickTrackAction(
     };
   }
 
-  const media = await ensureMediaInCatalogue(parsed.data);
+  let media: MediaItem | null = null;
+  try {
+    media = await ensureMediaInCatalogue(parsed.data);
+  } catch (err) {
+    if (err instanceof TmdbUnavailableError) {
+      return {
+        success: false,
+        error: "Couldn't reach TMDB right now. Please try again.",
+      };
+    }
+    throw err;
+  }
+
   if (!media) {
     return {
       success: false,
-      error: "Media item does not exist in the catalogue.",
+      error: "This title could not be found.",
     };
   }
 
@@ -174,12 +203,13 @@ export async function quickTrackAction(
     });
 
     revalidatePath("/library");
-    revalidatePath(`/title/${normalized.mediaId}`);
-    revalidatePath("/discover");
 
     return {
       success: true,
-      data: entry,
+      data: {
+        ...entry,
+        media,
+      },
     };
   } catch (error) {
     console.error("quickTrackAction error:", error);
@@ -217,8 +247,6 @@ export async function removeLibraryEntryAction(
     await deleteLibraryEntry(user.id, trimmed);
 
     revalidatePath("/library");
-    revalidatePath(`/title/${trimmed}`);
-    revalidatePath("/discover");
 
     return {
       success: true,

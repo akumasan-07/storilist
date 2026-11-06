@@ -6,7 +6,18 @@
  */
 
 import { MediaItem } from "@/types/media";
-import { fetchTmdbMovie, fetchTmdbTv } from "./tmdb";
+import {
+  fetchTmdbMovie,
+  fetchTmdbTv,
+  fetchDiscoverCatalogue,
+  fetchTmdbRecommendations,
+  fetchHomeFeaturedTitles,
+  TmdbUnavailableError,
+  TmdbNotFoundError,
+  DISCOVER_GENRES,
+  type DiscoverSortOption,
+  type DiscoverResult,
+} from "./tmdb";
 
 if (typeof window !== "undefined") {
   throw new Error("providers/index.ts may only be executed on the server.");
@@ -66,3 +77,14 @@ export async function fetchMediaFromProvider(
 
   return null;
 }
+
+export {
+  fetchDiscoverCatalogue,
+  fetchTmdbRecommendations,
+  fetchHomeFeaturedTitles,
+  TmdbUnavailableError,
+  TmdbNotFoundError,
+  DISCOVER_GENRES,
+  type DiscoverSortOption,
+  type DiscoverResult,
+};

@@ -15,10 +15,16 @@ import {
   Clapperboard,
   Tv,
   BookText,
+  Loader2,
 } from "lucide-react";
 import { useClickOutside } from "@/hooks/useClickOutside";
+import {
+  DISCOVER_GENRES,
+  DISCOVER_SORT_OPTIONS,
+  type DiscoverSortOption,
+} from "@/lib/discover";
 
-export type DiscoverSortOption = "rating" | "title" | "year-desc" | "year-asc";
+export type { DiscoverSortOption };
 
 const CATEGORY_TABS = [
   { key: "all", label: "All Formats", icon: Compass },
@@ -29,23 +35,7 @@ const CATEGORY_TABS = [
   { key: "novels", label: "Novels", icon: BookText },
 ];
 
-const GENRE_OPTIONS = [
-  "All Genres",
-  "Action",
-  "Fantasy",
-  "Sci-Fi",
-  "Drama",
-  "Supernatural",
-  "Adventure",
-  "Mystery",
-];
-
-const SORT_OPTIONS: { value: DiscoverSortOption; label: string }[] = [
-  { value: "rating", label: "Top Rated" },
-  { value: "title", label: "Title (A–Z)" },
-  { value: "year-desc", label: "Newest First" },
-  { value: "year-asc", label: "Oldest First" },
-];
+const SORT_OPTIONS = DISCOVER_SORT_OPTIONS;
 
 interface DiscoverFiltersProps {
   searchQuery: string;
@@ -60,6 +50,7 @@ interface DiscoverFiltersProps {
   onToggleFilters: () => void;
   isFiltered: boolean;
   onResetFilters: () => void;
+  isPending?: boolean;
 }
 
 export default function DiscoverFilters({
@@ -75,12 +66,13 @@ export default function DiscoverFilters({
   onToggleFilters,
   isFiltered,
   onResetFilters,
+  isPending = false,
 }: DiscoverFiltersProps) {
   const [isSortOpen, setIsSortOpen] = useState(false);
   const sortDropdownRef = useClickOutside<HTMLDivElement>(() => setIsSortOpen(false), isSortOpen);
 
   const currentSortLabel =
-    SORT_OPTIONS.find((opt) => opt.value === sortBy)?.label || "Top Rated";
+    SORT_OPTIONS.find((opt) => opt.value === sortBy)?.label || "Popular";
 
   return (
     <>
@@ -88,14 +80,18 @@ export default function DiscoverFilters({
       <div className="mt-6">
         <div className="group relative flex items-center rounded-2xl border border-border bg-card p-1.5 shadow-sm transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 min-h-[44px]">
           <div className="pointer-events-none flex items-center pl-3 text-subtle-foreground">
-            <Search className="h-4 w-4" aria-hidden="true" />
+            {isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin text-primary" aria-hidden="true" />
+            ) : (
+              <Search className="h-4 w-4" aria-hidden="true" />
+            )}
           </div>
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             aria-label="Search media catalog"
-            placeholder="Search by title, creator, studio, genre..."
+            placeholder="Search by title, movie, series..."
             className="w-full bg-transparent px-2.5 py-2 text-xs sm:text-sm text-foreground placeholder:text-subtle-foreground focus:outline-none"
           />
           {searchQuery && (
@@ -207,7 +203,7 @@ export default function DiscoverFilters({
             <span className="w-full sm:w-auto text-xs font-medium text-muted-foreground mb-1 sm:mb-0 sm:mr-1">
               Filter Genre:
             </span>
-            {GENRE_OPTIONS.map((genre) => {
+            {DISCOVER_GENRES.map((genre) => {
               const isSelected = selectedGenre === genre;
               return (
                 <button

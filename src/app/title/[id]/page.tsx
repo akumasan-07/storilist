@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { after } from "next/server";
 import { ArrowLeft } from "lucide-react";
 import Container from "@/components/Container";
-import { getMediaById, getRelatedMedia, upsertMediaFromProvider } from "@/lib/db/media";
+import { getMediaById, upsertMediaFromProvider } from "@/lib/db/media";
 import { getUserLibraryItems } from "@/lib/db/library";
 import { createClient } from "@/lib/supabase/server";
-import { parseMediaId, fetchMediaFromProvider } from "@/lib/providers";
+import {
+  parseMediaId,
+  fetchMediaFromProvider,
+  fetchTmdbRecommendations,
+} from "@/lib/providers";
 import { MediaItem } from "@/types/media";
 import LibrarySync from "@/components/LibrarySync";
 import TitleHero from "@/components/title/TitleHero";
@@ -21,9 +26,9 @@ interface PageProps {
 /**
  * Resolves media by ID:
  * 1. Database catalogue first.
- * 2. If database row exists with source and is older than 30 days, refreshes best-effort in the background.
+ * 2. If database row exists with source and is older than 30 days, schedules background refresh via after().
  * 3. If missing from DB and ID conforms to a valid provider format, fetches from provider for display (read-only, no write).
- * 4. Returns null on invalid ID or provider failure (no leaked provider errors).
+ * 4. Returns null on invalid ID or 404 not found. Throws on provider outage so error boundary displays.
  */
 async function resolveTitleMedia(id: string): Promise<MediaItem | null> {
   const dbMedia = await getMediaById(id);
@@ -33,14 +38,17 @@ async function resolveTitleMedia(id: string): Promise<MediaItem | null> {
       const fetchedTime = new Date(dbMedia.fetchedAt).getTime();
       const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
       if (Date.now() - fetchedTime > thirtyDaysMs) {
-        // Best-effort background refresh (never fail or slow down the response)
-        fetchMediaFromProvider(dbMedia.id)
-          .then((fresh) => {
-            if (fresh) return upsertMediaFromProvider(fresh);
-          })
-          .catch((err) => {
+        // Scheduled background refresh via Next.js after() to prevent premature termination
+        after(async () => {
+          try {
+            const fresh = await fetchMediaFromProvider(dbMedia.id);
+            if (fresh) {
+              await upsertMediaFromProvider(fresh);
+            }
+          } catch (err) {
             console.error("Best-effort media refresh failed:", err);
-          });
+          }
+        });
       }
     }
     return dbMedia;
@@ -51,13 +59,7 @@ async function resolveTitleMedia(id: string): Promise<MediaItem | null> {
     return null;
   }
 
-  try {
-    const providerMedia = await fetchMediaFromProvider(id);
-    return providerMedia;
-  } catch (error) {
-    console.error("Failed to fetch provider media:", error);
-    return null;
-  }
+  return fetchMediaFromProvider(id);
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -92,7 +94,16 @@ export default async function TitleDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const relatedMedia = await getRelatedMedia(media.category, media.id, 4);
+  let relatedMedia: MediaItem[] = [];
+  const parsed = parseMediaId(media.id);
+  if (parsed && (parsed.type === "movie" || parsed.type === "tv")) {
+    try {
+      relatedMedia = await fetchTmdbRecommendations(parsed.type, parsed.externalId, 6);
+    } catch (err) {
+      console.error("Failed to fetch related media recommendations:", err);
+      relatedMedia = [];
+    }
+  }
 
   const supabase = await createClient();
   const {

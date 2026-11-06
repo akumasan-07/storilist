@@ -30,7 +30,6 @@ Screenshots: add images to docs/screenshots/ and uncomment.
 
 Tracking apps usually cover one medium. StoriList keeps anime, comics, movies, series and novels in a single library, each with progress that fits the format (episodes, chapters, volumes or minutes), plus a status, a 1-10 rating and personal notes.
 
-It's a non-commercial personal project built for a small group of friends and family.
 
 ## Features
 

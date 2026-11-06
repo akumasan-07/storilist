@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Star, SlidersHorizontal } from "lucide-react";
 import { LibraryItem, LibraryStatus } from "@/types/library";
-import { getCategoryMeta } from "@/lib/media";
+import { getCategoryMeta, formatYear } from "@/lib/media";
 import { getProgressPercent } from "@/lib/library";
 
 const STATUS_BADGE_STYLES: Record<LibraryStatus, string> = {
@@ -64,11 +64,13 @@ export default function LibraryCard({ item, onOpenLogModal }: LibraryCardProps) 
             </div>
 
             {/* Year Badge (Top-Right) */}
-            <div className="absolute top-2 right-2 max-w-[48%]">
-              <span className="block truncate rounded-md bg-black/65 px-1.5 py-0.5 text-[10px] font-semibold text-white/95 backdrop-blur-xs shadow-xs">
-                {item.media.startYear}
-              </span>
-            </div>
+            {formatYear(item.media) ? (
+              <div className="absolute top-2 right-2 max-w-[48%]">
+                <span className="block truncate rounded-md bg-black/65 px-1.5 py-0.5 text-[10px] font-semibold text-white/95 backdrop-blur-xs shadow-xs">
+                  {formatYear(item.media)}
+                </span>
+              </div>
+            ) : null}
 
             {/* Bottom Overlay Status Tag */}
             <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
