@@ -50,7 +50,7 @@ Tracking apps usually cover one medium. StoriList keeps anime, comics, movies, s
 | Database and auth | Supabase (PostgreSQL, Auth, Row-Level Security) via `@supabase/ssr` |
 | Validation | Zod |
 | Styling | Tailwind CSS v4, lucide-react |
-| Data sources | TMDB API (more in the roadmap) |
+| Data sources | TMDB API, MyAnimeList API (more in the roadmap) |
 | Hosting | Vercel |
 
 ## How It Works
@@ -68,6 +68,7 @@ Tracking apps usually cover one medium. StoriList keeps anime, comics, movies, s
 - Node.js 20.9 or later
 - A free [Supabase](https://supabase.com/) project
 - A [TMDB](https://www.themoviedb.org/) API read access token
+- A [MyAnimeList](https://myanimelist.net/apiconfig) API Client ID
 
 ### Setup
 
@@ -94,6 +95,7 @@ Tracking apps usually cover one medium. StoriList keeps anime, comics, movies, s
 | `NEXT_PUBLIC_SITE_URL` | Canonical site URL, used in auth emails (set it in production) | No |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase secret key, server-only, used to save provider titles | **Yes** |
 | `TMDB_READ_ACCESS_TOKEN` | TMDB v4 read access token, server-only | **Yes** |
+| `MAL_CLIENT_ID` | MyAnimeList API Client ID, server-only | **Yes** |
 
 Never commit `.env.local`, and never prefix secrets with `NEXT_PUBLIC_`.
 
@@ -122,4 +124,4 @@ Deploy on [Vercel](https://vercel.com/) and add the same environment variables, 
 
 ## Credits
 
-This product uses the TMDB API but is not endorsed or certified by TMDB. Anime and manga data will come from the MyAnimeList API and novel data from Open Library. Attribution for each source is on the app's About page.
+This product uses the TMDB API but is not endorsed or certified by TMDB. Anime and manga information is provided via the MyAnimeList API. StoriList is an unofficial, non-commercial personal project and is not affiliated with or endorsed by MyAnimeList. Novel data will come from Open Library. Attribution for each source is on the app's About page.

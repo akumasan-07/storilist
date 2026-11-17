@@ -129,21 +129,11 @@ export default function LibraryCard({ item, onOpenLogModal }: LibraryCardProps) 
                 </div>
               </>
             ) : (
-              <>
-                <div className="flex items-center justify-between text-[10px] sm:text-[11px]">
-                  <span className="font-semibold text-foreground truncate">
-                    {item.currentProgress} {item.media.progressUnit}
-                  </span>
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-primary shrink-0">
-                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                    Ongoing
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between pt-0.5 text-[10px] text-muted-foreground">
-                  <span className="truncate">Serialized release</span>
-                </div>
-              </>
+              <div className="flex items-center justify-between text-[10px] sm:text-[11px]">
+                <span className="font-semibold text-foreground truncate">
+                  {item.currentProgress} {item.media.progressUnit}
+                </span>
+              </div>
             )}
           </div>
 

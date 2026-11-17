@@ -2,6 +2,8 @@ import type { MediaCategory } from "./library";
 
 export type MediaSource = "tmdb" | "mal" | "openlibrary";
 
+export type ReleaseStatus = "Completed" | "Ongoing" | "Upcoming";
+
 export interface MediaItem {
   id: string;
   title: string;
@@ -16,10 +18,11 @@ export interface MediaItem {
   synopsis: string;
   totalProgress: number | null; // null for ongoing serialization without fixed total
   progressUnit: string; // "episodes" | "chapters" | "mins" | "volumes"
-  releaseStatus: "Completed" | "Ongoing";
+  releaseStatus: ReleaseStatus;
   creators?: string[];
   tagline?: string;
   source?: MediaSource | null;
   externalId?: string | null;
   fetchedAt?: string | null;
+  related?: MediaItem[];
 }

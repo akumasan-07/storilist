@@ -44,7 +44,9 @@ export default function TitleSidebar({ media }: TitleSidebarProps) {
           <span className="font-semibold text-foreground text-right">
             {media.totalProgress !== null
               ? `${media.totalProgress} ${media.progressUnit}`
-              : "Ongoing"}
+              : media.releaseStatus === "Ongoing"
+                ? "Ongoing"
+                : "Unknown"}
           </span>
         </div>
 
@@ -52,7 +54,7 @@ export default function TitleSidebar({ media }: TitleSidebarProps) {
           <span className="text-muted-foreground shrink-0">Community Score</span>
           <span className="font-semibold text-foreground flex items-center gap-1 shrink-0">
             <Star className="h-3 w-3 fill-rating text-rating" aria-hidden="true" />
-            <span>{media.rating.toFixed(1)} / 10</span>
+            <span>{media.rating > 0 ? `${media.rating.toFixed(1)} / 10` : "Unrated"}</span>
           </span>
         </div>
       </div>

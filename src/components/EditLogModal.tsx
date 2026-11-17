@@ -259,9 +259,8 @@ function EditLogModalDialog({
                     {getProgressPercent(currentProgress, media.totalProgress)}%)
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 text-primary-subtle-foreground font-semibold">
-                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                    Ongoing publication
+                  <span className="text-subtle-foreground font-medium">
+                    {media.releaseStatus === "Ongoing" ? "Ongoing" : "Unknown total"}
                   </span>
                 )}
               </div>

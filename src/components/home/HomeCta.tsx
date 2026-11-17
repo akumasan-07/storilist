@@ -14,7 +14,7 @@ export default function HomeCta() {
             className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 -z-10 h-56 w-80 rounded-full bg-primary/10 blur-[80px]"
           />
 
-          <div className="mx-auto max-w-2xl">
+          <div className="mx-auto max-w-4xl">
             {/* Brand logo */}
             <Image
               src="/logo.png"

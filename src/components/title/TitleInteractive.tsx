@@ -142,7 +142,7 @@ export default function TitleInteractive({ media }: TitleInteractiveProps) {
                   </span>
                 ) : (
                   <span>
-                    Progress: {trackedEntry.currentProgress} {media.progressUnit} logged (Ongoing)
+                    Progress: {trackedEntry.currentProgress} {media.progressUnit} logged
                   </span>
                 )}
               </div>

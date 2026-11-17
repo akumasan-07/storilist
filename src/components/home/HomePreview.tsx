@@ -1,4 +1,3 @@
-import Link from "next/link";
 import Image from "next/image";
 import {
   Sparkles,
@@ -6,9 +5,7 @@ import {
   Clapperboard,
   Tv,
   Star,
-  TrendingUp,
   Clock,
-  ArrowRight,
   Repeat,
 } from "lucide-react";
 import Container from "@/components/Container";
@@ -244,21 +241,6 @@ export default function HomePreview() {
                 </div>
               </div>
             ))}
-          </div>
-
-          {/* Mockup Footer Stats Bar */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-t border-border bg-muted-surface/50 px-4 py-2.5 sm:px-6 text-xs text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-3.5 w-3.5 text-primary shrink-0" aria-hidden="true" />
-              <span><strong className="text-foreground">88%</strong> on track this week</span>
-            </div>
-            <Link
-              href="/library"
-              className="text-xs font-semibold text-primary hover:text-primary-hover inline-flex items-center gap-1 transition-colors self-start sm:self-auto py-0.5"
-            >
-              <span>View Full Library</span>
-              <ArrowRight className="h-3 w-3" aria-hidden="true" />
-            </Link>
           </div>
         </div>
       </Container>

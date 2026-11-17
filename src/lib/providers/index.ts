@@ -18,6 +18,16 @@ import {
   type DiscoverSortOption,
   type DiscoverResult,
 } from "./tmdb";
+import {
+  fetchMalAnime,
+  fetchMalManga,
+  MalNotFoundError,
+  MalUnavailableError,
+} from "./mal";
+import {
+  ProviderNotFoundError,
+  ProviderUnavailableError,
+} from "./http";
 
 if (typeof window !== "undefined") {
   throw new Error("providers/index.ts may only be executed on the server.");
@@ -32,6 +42,7 @@ export interface ParsedMediaId {
 }
 
 const TMDB_ID_REGEX = /^tmdb-(movie|tv)-(\d{1,9})$/;
+const MAL_ID_REGEX = /^mal-(anime|manga)-(\d{1,9})$/;
 
 /**
  * Strict parser for external media IDs.
@@ -49,7 +60,14 @@ export function parseMediaId(id: string): ParsedMediaId | null {
     };
   }
 
-  // Future provider regex patterns (e.g. MAL, OpenLibrary) can be added here cleanly
+  const malMatch = id.match(MAL_ID_REGEX);
+  if (malMatch) {
+    return {
+      source: "mal",
+      type: malMatch[1] as "anime" | "manga",
+      externalId: malMatch[2],
+    };
+  }
 
   return null;
 }
@@ -75,15 +93,66 @@ export async function fetchMediaFromProvider(
     }
   }
 
+  if (parsed.source === "mal") {
+    if (parsed.type === "anime") {
+      return fetchMalAnime(parsed.externalId);
+    }
+    if (parsed.type === "manga") {
+      return fetchMalManga(parsed.externalId);
+    }
+  }
+
   return null;
+}
+
+/**
+ * Resolves recommendations/related titles for a media item.
+ * For MAL, uses the recommendations already attached to the item during details fetch.
+ * For TMDB, delegates to fetchTmdbRecommendations.
+ */
+export async function fetchRelatedMedia(
+  media: MediaItem,
+  limit: number = 6
+): Promise<MediaItem[]> {
+  const parsed = parseMediaId(media.id);
+  if (!parsed) return [];
+
+  // If recommendations were already attached to the item (MAL details response), use them
+  if (media.related && media.related.length > 0) {
+    return media.related.slice(0, limit);
+  }
+
+  if (parsed.source === "tmdb" && (parsed.type === "movie" || parsed.type === "tv")) {
+    return fetchTmdbRecommendations(parsed.type, parsed.externalId, limit);
+  }
+
+  if (parsed.source === "mal") {
+    try {
+      const fresh =
+        parsed.type === "anime"
+          ? await fetchMalAnime(parsed.externalId)
+          : await fetchMalManga(parsed.externalId);
+      return fresh?.related?.slice(0, limit) || [];
+    } catch {
+      return [];
+    }
+  }
+
+  return [];
 }
 
 export {
   fetchDiscoverCatalogue,
   fetchTmdbRecommendations,
   fetchHomeFeaturedTitles,
+  fetchMalAnime,
+  fetchMalManga,
+  ProviderNotFoundError,
+  ProviderUnavailableError,
   TmdbUnavailableError,
   TmdbNotFoundError,
+  MalNotFoundError,
+  MalUnavailableError,
   DISCOVER_GENRES,
   type DiscoverSortOption,
   type DiscoverResult,

@@ -10,7 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 import {
   parseMediaId,
   fetchMediaFromProvider,
-  fetchTmdbRecommendations,
+  fetchRelatedMedia,
 } from "@/lib/providers";
 import { MediaItem } from "@/types/media";
 import LibrarySync from "@/components/LibrarySync";
@@ -95,14 +95,11 @@ export default async function TitleDetailPage({ params }: PageProps) {
   }
 
   let relatedMedia: MediaItem[] = [];
-  const parsed = parseMediaId(media.id);
-  if (parsed && (parsed.type === "movie" || parsed.type === "tv")) {
-    try {
-      relatedMedia = await fetchTmdbRecommendations(parsed.type, parsed.externalId, 6);
-    } catch (err) {
-      console.error("Failed to fetch related media recommendations:", err);
-      relatedMedia = [];
-    }
+  try {
+    relatedMedia = await fetchRelatedMedia(media, 6);
+  } catch (err) {
+    console.error("Failed to fetch related media recommendations:", err);
+    relatedMedia = [];
   }
 
   const supabase = await createClient();

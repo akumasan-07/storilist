@@ -114,7 +114,9 @@ export default function TitleHero({ media, trackingSlot }: TitleHeroProps) {
 
               <div className="flex items-center gap-1.5 shrink-0">
                 <Star className="h-4 w-4 fill-rating text-rating" aria-hidden="true" />
-                <span className="font-bold text-foreground text-sm">{media.rating.toFixed(1)}</span>
+                <span className="font-bold text-foreground text-sm">
+                  {media.rating > 0 ? media.rating.toFixed(1) : "Unrated"}
+                </span>
                 <span className="text-subtle-foreground hidden sm:inline">(Community score)</span>
               </div>
 
@@ -123,7 +125,9 @@ export default function TitleHero({ media, trackingSlot }: TitleHeroProps) {
               <div className="text-subtle-foreground shrink-0">
                 {media.totalProgress !== null
                   ? `${media.totalProgress} ${media.progressUnit}`
-                  : "Ongoing serialization"}
+                  : media.releaseStatus === "Ongoing"
+                    ? "Ongoing"
+                    : "Unknown"}
               </div>
             </div>
 

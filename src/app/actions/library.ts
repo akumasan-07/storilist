@@ -13,7 +13,9 @@ import { normalizeEntry } from "@/lib/library";
 import {
   parseMediaId,
   fetchMediaFromProvider,
+  ProviderUnavailableError,
   TmdbUnavailableError,
+  MalUnavailableError,
 } from "@/lib/providers";
 import { LibraryItem } from "@/types/library";
 import { MediaItem } from "@/types/media";
@@ -80,6 +82,18 @@ export async function saveLibraryEntryAction(
       return {
         success: false,
         error: "Couldn't reach TMDB right now. Please try again.",
+      };
+    }
+    if (err instanceof MalUnavailableError) {
+      return {
+        success: false,
+        error: "Couldn't reach MyAnimeList right now. Please try again.",
+      };
+    }
+    if (err instanceof ProviderUnavailableError) {
+      return {
+        success: false,
+        error: "Couldn't reach the catalogue right now. Please try again.",
       };
     }
     throw err;
@@ -171,6 +185,18 @@ export async function quickTrackAction(
       return {
         success: false,
         error: "Couldn't reach TMDB right now. Please try again.",
+      };
+    }
+    if (err instanceof MalUnavailableError) {
+      return {
+        success: false,
+        error: "Couldn't reach MyAnimeList right now. Please try again.",
+      };
+    }
+    if (err instanceof ProviderUnavailableError) {
+      return {
+        success: false,
+        error: "Couldn't reach the catalogue right now. Please try again.",
       };
     }
     throw err;

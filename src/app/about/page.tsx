@@ -101,6 +101,36 @@ export default function AboutPage() {
               </div>
             </div>
 
+            {/* MyAnimeList Attribution Card (Text-only, no logo) */}
+            <div className="rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-xs space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border-subtle pb-5">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-bold text-foreground">
+                    MyAnimeList
+                  </span>
+                  <span className="text-xs font-semibold text-subtle-foreground">
+                    Anime &amp; Comics Metadata
+                  </span>
+                </div>
+
+                <a
+                  href="https://myanimelist.net"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+                >
+                  <span>Visit myanimelist.net</span>
+                  <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                </a>
+              </div>
+
+              <div className="space-y-3 text-xs sm:text-sm leading-relaxed text-muted-foreground">
+                <p>
+                  Anime and manga information is provided via the MyAnimeList API. StoriList is an unofficial, non-commercial personal project and is not affiliated with or endorsed by MyAnimeList.
+                </p>
+              </div>
+            </div>
+
             {/* Data integrity card */}
             <div className="rounded-3xl border border-border bg-card p-6 shadow-xs">
               <div className="flex items-start gap-3.5">

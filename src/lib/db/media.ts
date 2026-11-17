@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { MediaItem, MediaSource } from "@/types/media";
+import { MediaItem, MediaSource, ReleaseStatus } from "@/types/media";
 import { MediaCategory } from "@/types/library";
 
 export interface MediaRow {
@@ -41,7 +41,7 @@ export function mapMediaRowToItem(row: MediaRow): MediaItem {
     synopsis: row.synopsis ?? "",
     totalProgress: row.total_progress,
     progressUnit: row.progress_unit,
-    releaseStatus: (row.release_status as "Completed" | "Ongoing") || "Completed",
+    releaseStatus: (row.release_status as ReleaseStatus) || "Completed",
     creators: row.creators ?? undefined,
     tagline: row.tagline ?? undefined,
     source: (row.source as MediaSource) ?? null,
