@@ -98,7 +98,7 @@ export interface MalMangaDetail {
   recommendations?: MalRecommendation[];
 }
 
-const ANIME_MEDIA_TYPE_MAP: Record<string, string> = {
+export const ANIME_MEDIA_TYPE_MAP: Record<string, string> = {
   tv: "TV Series",
   movie: "Movie",
   ova: "OVA",
@@ -107,7 +107,7 @@ const ANIME_MEDIA_TYPE_MAP: Record<string, string> = {
   tv_special: "TV Special",
 };
 
-const MANGA_MEDIA_TYPE_MAP: Record<string, string> = {
+export const MANGA_MEDIA_TYPE_MAP: Record<string, string> = {
   manga: "Manga",
   manhwa: "Manhwa",
   manhua: "Manhua",
@@ -413,4 +413,322 @@ export async function fetchMalManga(externalId: string): Promise<MediaItem | nul
 
   return mapMalMangaToItem(data);
 }
+
+// ==========================================
+// LIST FETCHERS, MAPPERS & DISCOVER SUPPORT
+// ==========================================
+
+export interface MalListEntry {
+  node: {
+    id: number;
+    title: string;
+    main_picture?: MalPicture;
+    start_date?: string;
+    mean?: number;
+    genres?: MalGenre[];
+    media_type?: string;
+    status?: string;
+    nsfw?: string;
+  };
+  ranking?: { rank: number };
+}
+
+export interface MalListResponse {
+  data: MalListEntry[];
+  paging?: {
+    next?: string;
+    previous?: string;
+  };
+}
+
+const MAL_LIST_FIELDS = "mean,start_date,genres,media_type,nsfw,status";
+
+/**
+ * Lightweight, display-only mapper from MAL list items to MediaItem.
+ * Never issues per-item detail queries.
+ */
+export function mapMalListItemToMedia(
+  node: MalListEntry["node"],
+  type: "anime" | "manga"
+): MediaItem | null {
+  // Family-friendly: exclude adult content (only "white" is permitted)
+  if (node.nsfw && node.nsfw !== "white") {
+    return null;
+  }
+
+  if (!node.id || !node.title) {
+    return null;
+  }
+
+  const format =
+    type === "anime"
+      ? node.media_type
+        ? ANIME_MEDIA_TYPE_MAP[node.media_type]
+        : undefined
+      : node.media_type
+        ? MANGA_MEDIA_TYPE_MAP[node.media_type]
+        : undefined;
+
+  // Silently drop non-supported formats (music, pv, cm, novel, light_novel, doujinshi, etc.)
+  if (!format) {
+    return null;
+  }
+
+  const startYear = parseMalYear(node.start_date);
+  const isFinished =
+    type === "anime"
+      ? node.status === "finished_airing"
+      : node.status === "finished";
+  const isUpcoming =
+    type === "anime"
+      ? node.status === "not_yet_aired"
+      : node.status === "not_yet_published";
+
+  const releaseStatus: ReleaseStatus = isFinished
+    ? "Completed"
+    : isUpcoming
+      ? "Upcoming"
+      : "Ongoing";
+
+  const endYear = isFinished ? startYear || null : null;
+
+  const rating =
+    typeof node.mean === "number" && node.mean > 0
+      ? Math.round(node.mean * 10) / 10
+      : 0;
+
+  const genres = (node.genres || [])
+    .map((g) => g.name)
+    .filter(Boolean);
+
+  const poster =
+    node.main_picture?.large || node.main_picture?.medium || "";
+
+  return {
+    id: `mal-${type}-${node.id}`,
+    title: node.title,
+    category: type === "anime" ? "Anime" : "Comics",
+    format,
+    studio: "",
+    startYear,
+    endYear,
+    rating,
+    genres,
+    poster,
+    synopsis: "",
+    totalProgress: null,
+    progressUnit: type === "anime" ? "episodes" : "chapters",
+    releaseStatus,
+    source: "mal",
+    externalId: String(node.id),
+    fetchedAt: new Date().toISOString(),
+  };
+}
+
+export async function fetchMalAnimeRanking(
+  rankingType: "bypopularity" | "all" = "bypopularity",
+  limit: number = 20,
+  offset: number = 0
+): Promise<MalListResponse | null> {
+  const clientId = process.env.MAL_CLIENT_ID;
+  if (!clientId) {
+    console.warn("[MAL] MAL_CLIENT_ID is not configured.");
+    throw new MalUnavailableError("MAL_CLIENT_ID is not configured.");
+  }
+
+  return providerFetch<MalListResponse>({
+    providerName: "MAL",
+    url: `${MAL_BASE_URL}/anime/ranking?ranking_type=${rankingType}&limit=${limit}&offset=${offset}&fields=${MAL_LIST_FIELDS}`,
+    headers: { "X-MAL-CLIENT-ID": clientId },
+    revalidateSeconds: 3600,
+    createUnavailableError: (msg, cause) => new MalUnavailableError(msg, cause),
+  });
+}
+
+export async function fetchMalMangaRanking(
+  rankingType: "bypopularity" | "all" = "bypopularity",
+  limit: number = 20,
+  offset: number = 0
+): Promise<MalListResponse | null> {
+  const clientId = process.env.MAL_CLIENT_ID;
+  if (!clientId) {
+    console.warn("[MAL] MAL_CLIENT_ID is not configured.");
+    throw new MalUnavailableError("MAL_CLIENT_ID is not configured.");
+  }
+
+  return providerFetch<MalListResponse>({
+    providerName: "MAL",
+    url: `${MAL_BASE_URL}/manga/ranking?ranking_type=${rankingType}&limit=${limit}&offset=${offset}&fields=${MAL_LIST_FIELDS}`,
+    headers: { "X-MAL-CLIENT-ID": clientId },
+    revalidateSeconds: 3600,
+    createUnavailableError: (msg, cause) => new MalUnavailableError(msg, cause),
+  });
+}
+
+export async function searchMalAnime(
+  query: string,
+  limit: number = 20,
+  offset: number = 0
+): Promise<MalListResponse | null> {
+  const clean = query.trim();
+  if (clean.length < 3) return null;
+
+  const clientId = process.env.MAL_CLIENT_ID;
+  if (!clientId) {
+    console.warn("[MAL] MAL_CLIENT_ID is not configured.");
+    throw new MalUnavailableError("MAL_CLIENT_ID is not configured.");
+  }
+
+  return providerFetch<MalListResponse>({
+    providerName: "MAL",
+    url: `${MAL_BASE_URL}/anime?q=${encodeURIComponent(clean)}&limit=${limit}&offset=${offset}&fields=${MAL_LIST_FIELDS}`,
+    headers: { "X-MAL-CLIENT-ID": clientId },
+    revalidateSeconds: 3600,
+    createUnavailableError: (msg, cause) => new MalUnavailableError(msg, cause),
+  });
+}
+
+export async function searchMalManga(
+  query: string,
+  limit: number = 20,
+  offset: number = 0
+): Promise<MalListResponse | null> {
+  const clean = query.trim();
+  if (clean.length < 3) return null;
+
+  const clientId = process.env.MAL_CLIENT_ID;
+  if (!clientId) {
+    console.warn("[MAL] MAL_CLIENT_ID is not configured.");
+    throw new MalUnavailableError("MAL_CLIENT_ID is not configured.");
+  }
+
+  return providerFetch<MalListResponse>({
+    providerName: "MAL",
+    url: `${MAL_BASE_URL}/manga?q=${encodeURIComponent(clean)}&limit=${limit}&offset=${offset}&fields=${MAL_LIST_FIELDS}`,
+    headers: { "X-MAL-CLIENT-ID": clientId },
+    revalidateSeconds: 3600,
+    createUnavailableError: (msg, cause) => new MalUnavailableError(msg, cause),
+  });
+}
+
+const MAL_GENRE_ALIASES: Record<string, string[]> = {
+  "Sci-Fi": ["sci-fi", "science fiction"],
+  "Action": ["action", "action & adventure"],
+  "Adventure": ["adventure", "action & adventure"],
+  "Thriller": ["thriller", "suspense"],
+  "War": ["war", "military", "war & politics"],
+  "Crime": ["crime", "detective"],
+  "Family": ["family", "kids"],
+};
+
+export function matchesMalGenre(itemGenres: string[], targetGenre: string): boolean {
+  if (!targetGenre || targetGenre === "All Genres" || targetGenre === "all") return true;
+  const targetLower = targetGenre.toLowerCase();
+  const aliases = MAL_GENRE_ALIASES[targetGenre]?.map((a) => a.toLowerCase()) || [targetLower];
+  if (!aliases.includes(targetLower)) {
+    aliases.push(targetLower);
+  }
+  return itemGenres.some((g) => aliases.includes(g.toLowerCase()));
+}
+
+export interface DiscoverMalOptions {
+  type: "anime" | "manga";
+  q?: string;
+  genre?: string;
+  sort?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface DiscoverMalResult {
+  items: MediaItem[];
+  page: number;
+  totalPages: number;
+  totalResults: number;
+  hasNext: boolean;
+}
+
+/**
+ * High-level Discover catalogue query for MyAnimeList.
+ * Supports pagination, genre filtering within a 100-item bounded window,
+ * and search vs ranking sorts.
+ */
+export async function discoverMalCatalogue(
+  options: DiscoverMalOptions
+): Promise<DiscoverMalResult> {
+  const page = Math.max(1, options.page || 1);
+  const pageSize = options.limit || 20;
+  const query = options.q?.trim();
+  const hasQuery = Boolean(query && query.length >= 3);
+  const hasGenre = Boolean(
+    options.genre && options.genre !== "All Genres" && options.genre !== "all"
+  );
+  const rankingType = options.sort === "rating" ? "all" : "bypopularity";
+
+  // When a genre filter is applied: fetch up to 100 items window and filter/paginate locally
+  if (hasGenre) {
+    const rawRes = hasQuery
+      ? options.type === "anime"
+        ? await searchMalAnime(query!, 100, 0)
+        : await searchMalManga(query!, 100, 0)
+      : options.type === "anime"
+        ? await fetchMalAnimeRanking(rankingType, 100, 0)
+        : await fetchMalMangaRanking(rankingType, 100, 0);
+
+    if (!rawRes || !rawRes.data || rawRes.data.length === 0) {
+      return { items: [], page, totalPages: 1, totalResults: 0, hasNext: false };
+    }
+
+    const allMapped = rawRes.data
+      .map((entry) => mapMalListItemToMedia(entry.node, options.type))
+      .filter((item): item is MediaItem => Boolean(item));
+
+    const filtered = allMapped.filter((item) =>
+      matchesMalGenre(item.genres, options.genre!)
+    );
+
+    const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+    const startIndex = (page - 1) * pageSize;
+    const items = filtered.slice(startIndex, startIndex + pageSize);
+    const hasNext = page < totalPages;
+
+    return {
+      items,
+      page,
+      totalPages,
+      totalResults: filtered.length,
+      hasNext,
+    };
+  }
+
+  // Without a genre filter: standard server-side offset pagination
+  const offset = (page - 1) * pageSize;
+  const rawRes = hasQuery
+    ? options.type === "anime"
+      ? await searchMalAnime(query!, pageSize, offset)
+      : await searchMalManga(query!, pageSize, offset)
+    : options.type === "anime"
+      ? await fetchMalAnimeRanking(rankingType, pageSize, offset)
+      : await fetchMalMangaRanking(rankingType, pageSize, offset);
+
+  if (!rawRes || !rawRes.data || rawRes.data.length === 0) {
+    return { items: [], page, totalPages: page, totalResults: 0, hasNext: false };
+  }
+
+  const items = rawRes.data
+    .map((entry) => mapMalListItemToMedia(entry.node, options.type))
+    .filter((item): item is MediaItem => Boolean(item));
+
+  const hasNext = Boolean(rawRes.paging?.next) && rawRes.data.length >= pageSize;
+  const totalPages = hasNext ? page + 1 : page;
+
+  return {
+    items,
+    page,
+    totalPages,
+    totalResults: 0,
+    hasNext,
+  };
+}
+
 

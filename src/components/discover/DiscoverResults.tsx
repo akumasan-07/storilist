@@ -1,5 +1,5 @@
 import { AlertCircle } from "lucide-react";
-import { fetchDiscoverCatalogue } from "@/lib/providers/tmdb";
+import { fetchDiscoverCatalogue } from "@/lib/providers";
 import type { DiscoverSortOption } from "@/lib/discover";
 import DiscoverComingSoon from "./DiscoverComingSoon";
 import DiscoverErrorState from "./DiscoverErrorState";
@@ -19,12 +19,9 @@ export default async function DiscoverResults({
 }: {
   params: ParsedDiscoverParams;
 }) {
-  if (
-    params.category === "anime" ||
-    params.category === "comics" ||
-    params.category === "novels"
-  ) {
-    return <DiscoverComingSoon category={params.category} />;
+  // Coming soon state now applies to Novels only
+  if (params.category === "novels") {
+    return <DiscoverComingSoon category="novels" />;
   }
 
   const result = await fetchDiscoverCatalogue({
@@ -35,8 +32,8 @@ export default async function DiscoverResults({
     page: params.page,
   });
 
-  if (!result) {
-    return <DiscoverErrorState />;
+  if (!result || result.failedProvider) {
+    return <DiscoverErrorState providerName={result?.failedProvider || "The catalogue"} />;
   }
 
   if (result.items.length === 0) {

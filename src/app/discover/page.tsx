@@ -5,7 +5,12 @@ import Container from "@/components/Container";
 import LibrarySync from "@/components/LibrarySync";
 import { getUserLibraryItems } from "@/lib/db/library";
 import { createClient } from "@/lib/supabase/server";
-import { DISCOVER_GENRES, type DiscoverSortOption } from "@/lib/discover";
+import {
+  DISCOVER_GENRES,
+  normalizeSortForCategory,
+  normalizeGenreForCategory,
+  type DiscoverSortOption,
+} from "@/lib/discover";
 import DiscoverFilterBar from "@/components/discover/DiscoverFilterBar";
 import DiscoverSkeletonGrid from "@/components/discover/DiscoverSkeletonGrid";
 import DiscoverResults, {
@@ -34,53 +39,59 @@ const VALID_SORTS = [
   "year-asc",
 ] as const;
 
-const discoverQuerySchema = z.object({
-  q: z
-    .unknown()
-    .optional()
-    .transform((val) => {
-      if (typeof val !== "string") return undefined;
-      const trimmed = val.trim();
-      return trimmed.length >= 2 && trimmed.length <= 100 ? trimmed : undefined;
-    }),
-  category: z
-    .unknown()
-    .optional()
-    .transform((val) => {
-      if (typeof val !== "string") return "all";
-      const lower = val.toLowerCase();
-      return (VALID_CATEGORIES as readonly string[]).includes(lower)
-        ? (lower as ParsedDiscoverParams["category"])
-        : "all";
-    }),
-  genre: z
-    .unknown()
-    .optional()
-    .transform((val) => {
-      if (typeof val !== "string") return undefined;
-      const match = DISCOVER_GENRES.find(
-        (g) => g.toLowerCase() === val.toLowerCase()
-      );
-      return match && match !== "All Genres" ? match : undefined;
-    }),
-  sort: z
-    .unknown()
-    .optional()
-    .transform((val) => {
-      if (typeof val !== "string") return "popular";
-      return (VALID_SORTS as readonly string[]).includes(val)
-        ? (val as DiscoverSortOption)
-        : "popular";
-    }),
-  page: z
-    .unknown()
-    .optional()
-    .transform((val) => {
-      if (typeof val !== "string") return 1;
-      const parsed = parseInt(val, 10);
-      return !Number.isNaN(parsed) && parsed >= 1 && parsed <= 500 ? parsed : 1;
-    }),
-});
+const discoverQuerySchema = z
+  .object({
+    q: z
+      .unknown()
+      .optional()
+      .transform((val) => {
+        if (typeof val !== "string") return undefined;
+        const trimmed = val.trim();
+        return trimmed.length >= 3 && trimmed.length <= 100 ? trimmed : undefined;
+      }),
+    category: z
+      .unknown()
+      .optional()
+      .transform((val) => {
+        if (typeof val !== "string") return "all";
+        const lower = val.toLowerCase();
+        return (VALID_CATEGORIES as readonly string[]).includes(lower)
+          ? (lower as ParsedDiscoverParams["category"])
+          : "all";
+      }),
+    genre: z
+      .unknown()
+      .optional()
+      .transform((val) => {
+        if (typeof val !== "string") return undefined;
+        const match = DISCOVER_GENRES.find(
+          (g) => g.toLowerCase() === val.toLowerCase()
+        );
+        return match && match !== "All Genres" ? match : undefined;
+      }),
+    sort: z
+      .unknown()
+      .optional()
+      .transform((val) => {
+        if (typeof val !== "string") return "popular";
+        return (VALID_SORTS as readonly string[]).includes(val)
+          ? (val as DiscoverSortOption)
+          : "popular";
+      }),
+    page: z
+      .unknown()
+      .optional()
+      .transform((val) => {
+        if (typeof val !== "string") return 1;
+        const parsed = parseInt(val, 10);
+        return !Number.isNaN(parsed) && parsed >= 1 && parsed <= 500 ? parsed : 1;
+      }),
+  })
+  .transform((data) => ({
+    ...data,
+    genre: normalizeGenreForCategory(data.category, data.genre),
+    sort: normalizeSortForCategory(data.category, data.sort),
+  }));
 
 interface DiscoverPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -116,13 +127,13 @@ export default async function DiscoverPage({ searchParams }: DiscoverPageProps) 
             Discover Stories
           </h1>
           <p className="mt-2 text-sm sm:text-base text-muted-foreground">
-            Explore live highlights across cinema and television, with anime, comics, and novels on the horizon.
+            Explore live highlights across cinema, television, anime, and comics, with novels on the horizon.
           </p>
         </div>
 
         {/* Filter & Search Bar (interactive while results load) */}
         <DiscoverFilterBar
-          initialQuery={parsed.q}
+          initialQuery={typeof normalizedParams.q === "string" ? normalizedParams.q : ""}
           initialCategory={parsed.category}
           initialGenre={parsed.genre || "All Genres"}
           initialSort={parsed.sort}

@@ -526,61 +526,37 @@ export async function fetchHomeFeaturedTitles(limit: number = 5): Promise<MediaI
   }
 }
 
-export interface DiscoverResult {
+export interface DiscoverTmdbSourceOptions {
+  type: "movie" | "tv";
+  q?: string;
+  genre?: string;
+  sort?: DiscoverSortOption;
+  page?: number;
+  limit?: number; // 20 for single-category, 5 for all tab
+}
+
+export interface DiscoverTmdbSourceResult {
   items: MediaItem[];
   page: number;
   totalPages: number;
   totalResults: number;
-  partialNotice?: string;
+  hasNext: boolean;
 }
 
 /**
- * Sort comparator prioritizing valid release years over unknown/0 years.
+ * Modular discover and search fetcher for TMDB Movies or TV.
+ * In search mode, results are returned in relevance order.
+ * In browse mode, sort applies via TMDB API parameters.
  */
-function sortItems(
-  items: MediaItem[],
-  sortBy: DiscoverSortOption
-): MediaItem[] {
-  return [...items].sort((a, b) => {
-    if (sortBy === "rating") {
-      return b.rating - a.rating;
-    }
-    if (sortBy === "year-desc") {
-      const aYear = a.startYear || 0;
-      const bYear = b.startYear || 0;
-      if (aYear === 0 && bYear === 0) return 0;
-      if (aYear === 0) return 1;
-      if (bYear === 0) return -1;
-      return bYear - aYear;
-    }
-    if (sortBy === "year-asc") {
-      const aYear = a.startYear || 0;
-      const bYear = b.startYear || 0;
-      if (aYear === 0 && bYear === 0) return 0;
-      if (aYear === 0) return 1;
-      if (bYear === 0) return -1;
-      return aYear - bYear;
-    }
-    return 0;
-  });
-}
-
-/**
- * Server-side catalogue engine for Discover.
- */
-export async function fetchDiscoverCatalogue(options: {
-  q?: string;
-  category?: "all" | "movies" | "series";
-  genre?: string;
-  sort?: DiscoverSortOption;
-  page?: number;
-}): Promise<DiscoverResult | null> {
-  const category = options.category || "all";
-  const sort = options.sort || "popular";
-  const page = Math.max(1, Math.min(500, options.page || 1));
+export async function discoverTmdbSource(
+  options: DiscoverTmdbSourceOptions
+): Promise<DiscoverTmdbSourceResult | null> {
+  const isMovie = options.type === "movie";
+  const limit = options.limit || 20;
+  const page = Math.max(1, options.page || 1);
   const query = options.q?.trim();
+  const sort = options.sort || "popular";
 
-  // Failed genre-list fetch must not block results (fallback to empty maps)
   const [movieGenresSettled, tvGenresSettled] = await Promise.allSettled([
     getMovieGenreMap(),
     getTvGenreMap(),
@@ -593,225 +569,92 @@ export async function fetchDiscoverCatalogue(options: {
     tvGenresSettled.status === "fulfilled"
       ? tvGenresSettled.value
       : new Map<number, string>();
+  const genreMap = isMovie ? movieGenres : tvGenres;
 
-  // Determine genre IDs if specified
-  let movieGenreId: number | undefined;
-  let tvGenreId: number | undefined;
-
+  let targetGenreId: number | undefined;
   if (options.genre && options.genre !== "All Genres" && options.genre !== "all") {
-    movieGenreId = GENRE_NAME_TO_MOVIE_ID[options.genre];
-    tvGenreId = GENRE_NAME_TO_TV_ID[options.genre];
+    targetGenreId = isMovie
+      ? GENRE_NAME_TO_MOVIE_ID[options.genre]
+      : GENRE_NAME_TO_TV_ID[options.genre];
   }
 
-  // 1. Text Search Mode
-  if (query) {
-    if (category === "movies") {
-      try {
-        const res = await searchTmdbMovies(query, page);
-        if (!res) return null;
-        let items = res.results.map((m) =>
-          mapTmdbListItemToMedia(m, "movie", movieGenres)
-        );
-        if (movieGenreId) {
-          items = items.filter((item) =>
-            res.results.find((raw) => String(raw.id) === item.externalId)?.genre_ids?.includes(movieGenreId!)
-          );
-        }
-        return {
-          items: sort === "popular" ? items : sortItems(items, sort),
-          page: res.page,
-          totalPages: Math.min(500, res.total_pages),
-          totalResults: res.total_results,
-        };
-      } catch (err) {
-        if (err instanceof TmdbUnavailableError) return null;
-        throw err;
-      }
+  // Calculate TMDB page and local slicing when limit is 5 (for All tab)
+  const isSizedForAll = limit === 5;
+  const tmdbPage = isSizedForAll
+    ? Math.floor((page - 1) / 4) + 1
+    : page;
+  const sliceStart = isSizedForAll ? ((page - 1) % 4) * 5 : 0;
+  const sliceEnd = sliceStart + limit;
+
+  // 1. Text Search Mode (Relevance order from TMDB, no artificial sort)
+  if (query && query.length >= 3) {
+    const rawRes = isMovie
+      ? await searchTmdbMovies(query, tmdbPage)
+      : await searchTmdbTv(query, tmdbPage);
+
+    if (!rawRes || !rawRes.results) {
+      return null;
     }
 
-    if (category === "series") {
-      try {
-        const res = await searchTmdbTv(query, page);
-        if (!res) return null;
-        let items = res.results.map((t) =>
-          mapTmdbListItemToMedia(t, "tv", tvGenres)
-        );
-        if (tvGenreId) {
-          items = items.filter((item) =>
-            res.results.find((raw) => String(raw.id) === item.externalId)?.genre_ids?.includes(tvGenreId!)
-          );
-        }
-        return {
-          items: sort === "popular" ? items : sortItems(items, sort),
-          page: res.page,
-          totalPages: Math.min(500, res.total_pages),
-          totalResults: res.total_results,
-        };
-      } catch (err) {
-        if (err instanceof TmdbUnavailableError) return null;
-        throw err;
-      }
-    }
-
-    // Category "all": search both independently with Promise.allSettled
-    const [movieSettled, tvSettled] = await Promise.allSettled([
-      searchTmdbMovies(query, page),
-      searchTmdbTv(query, page),
-    ]);
-
-    const movieRes = movieSettled.status === "fulfilled" ? movieSettled.value : null;
-    const tvRes = tvSettled.status === "fulfilled" ? tvSettled.value : null;
-
-    if (!movieRes && !tvRes) return null;
-
-    let movieItems = (movieRes?.results || []).map((m) =>
-      mapTmdbListItemToMedia(m, "movie", movieGenres)
+    let mapped = rawRes.results.map((raw) =>
+      mapTmdbListItemToMedia(raw, options.type, genreMap)
     );
-    if (movieGenreId && movieRes) {
-      movieItems = movieItems.filter((item) =>
-        movieRes.results.find((raw) => String(raw.id) === item.externalId)?.genre_ids?.includes(movieGenreId!)
+
+    if (targetGenreId) {
+      mapped = mapped.filter((item) =>
+        rawRes.results.find((raw) => String(raw.id) === item.externalId)?.genre_ids?.includes(targetGenreId!)
       );
     }
 
-    let tvItems = (tvRes?.results || []).map((t) =>
-      mapTmdbListItemToMedia(t, "tv", tvGenres)
-    );
-    if (tvGenreId && tvRes) {
-      tvItems = tvItems.filter((item) =>
-        tvRes.results.find((raw) => String(raw.id) === item.externalId)?.genre_ids?.includes(tvGenreId!)
-      );
-    }
-
-    // Interleave or combine results
-    const combined: MediaItem[] = [];
-    if (movieRes && tvRes) {
-      const maxLen = Math.max(movieItems.length, tvItems.length);
-      for (let i = 0; i < maxLen; i++) {
-        if (movieItems[i]) combined.push(movieItems[i]);
-        if (tvItems[i]) combined.push(tvItems[i]);
-      }
-    } else if (movieRes) {
-      combined.push(...movieItems);
-    } else if (tvRes) {
-      combined.push(...tvItems);
-    }
-
-    const totalPages = Math.min(
-      500,
-      Math.max(movieRes?.total_pages || 0, tvRes?.total_pages || 0)
-    );
-    const totalResults = (movieRes?.total_results || 0) + (tvRes?.total_results || 0);
-
-    const hasPartialFailure = (!movieRes && Boolean(tvRes)) || (Boolean(movieRes) && !tvRes);
+    const items = mapped.slice(sliceStart, sliceEnd);
+    const hasNext = isSizedForAll
+      ? tmdbPage < rawRes.total_pages || sliceEnd < mapped.length
+      : tmdbPage < rawRes.total_pages;
 
     return {
-      items: sort === "popular" ? combined : sortItems(combined, sort),
+      items,
       page,
-      totalPages: Math.max(1, totalPages),
-      totalResults,
-      partialNotice: hasPartialFailure
-        ? "Some results couldn't be loaded right now. Showing available titles."
-        : undefined,
+      totalPages: isSizedForAll
+        ? hasNext ? page + 1 : page
+        : Math.min(500, rawRes.total_pages),
+      totalResults: rawRes.total_results,
+      hasNext,
     };
   }
 
-  // 2. Discover / Browse Mode (No search query)
-  if (category === "movies") {
-    try {
-      const res = await discoverTmdbMovies({
-        genreId: movieGenreId,
+  // 2. Browse / Discover Mode
+  const rawRes = isMovie
+    ? await discoverTmdbMovies({
+        genreId: targetGenreId,
         sortBy: sort,
-        page,
-      });
-      if (!res) return null;
-      const items = res.results.map((m) =>
-        mapTmdbListItemToMedia(m, "movie", movieGenres)
-      );
-      return {
-        items,
-        page: res.page,
-        totalPages: Math.min(500, res.total_pages),
-        totalResults: res.total_results,
-      };
-    } catch (err) {
-      if (err instanceof TmdbUnavailableError) return null;
-      throw err;
-    }
-  }
-
-  if (category === "series") {
-    try {
-      const res = await discoverTmdbTv({
-        genreId: tvGenreId,
+        page: tmdbPage,
+      })
+    : await discoverTmdbTv({
+        genreId: targetGenreId,
         sortBy: sort,
-        page,
+        page: tmdbPage,
       });
-      if (!res) return null;
-      const items = res.results.map((t) =>
-        mapTmdbListItemToMedia(t, "tv", tvGenres)
-      );
-      return {
-        items,
-        page: res.page,
-        totalPages: Math.min(500, res.total_pages),
-        totalResults: res.total_results,
-      };
-    } catch (err) {
-      if (err instanceof TmdbUnavailableError) return null;
-      throw err;
-    }
+
+  if (!rawRes || !rawRes.results) {
+    return null;
   }
 
-  // Category "all" in discover mode: independent requests with Promise.allSettled
-  const [movieSettled, tvSettled] = await Promise.allSettled([
-    discoverTmdbMovies({ genreId: movieGenreId, sortBy: sort, page }),
-    discoverTmdbTv({ genreId: tvGenreId, sortBy: sort, page }),
-  ]);
-
-  const movieRes = movieSettled.status === "fulfilled" ? movieSettled.value : null;
-  const tvRes = tvSettled.status === "fulfilled" ? tvSettled.value : null;
-
-  if (!movieRes && !tvRes) return null;
-
-  const movieItems = (movieRes?.results || []).map((m) =>
-    mapTmdbListItemToMedia(m, "movie", movieGenres)
-  );
-  const tvItems = (tvRes?.results || []).map((t) =>
-    mapTmdbListItemToMedia(t, "tv", tvGenres)
+  const mapped = rawRes.results.map((raw) =>
+    mapTmdbListItemToMedia(raw, options.type, genreMap)
   );
 
-  let combined: MediaItem[] = [];
-  if (movieRes && tvRes) {
-    if (sort === "popular") {
-      const maxLen = Math.max(movieItems.length, tvItems.length);
-      for (let i = 0; i < maxLen; i++) {
-        if (movieItems[i]) combined.push(movieItems[i]);
-        if (tvItems[i]) combined.push(tvItems[i]);
-      }
-    } else {
-      combined = sortItems([...movieItems, ...tvItems], sort);
-    }
-  } else if (movieRes) {
-    combined = sort === "popular" ? movieItems : sortItems(movieItems, sort);
-  } else if (tvRes) {
-    combined = sort === "popular" ? tvItems : sortItems(tvItems, sort);
-  }
-
-  const totalPages = Math.min(
-    500,
-    Math.max(movieRes?.total_pages || 0, tvRes?.total_pages || 0)
-  );
-  const totalResults = (movieRes?.total_results || 0) + (tvRes?.total_results || 0);
-
-  const hasPartialFailure = (!movieRes && Boolean(tvRes)) || (Boolean(movieRes) && !tvRes);
+  const items = mapped.slice(sliceStart, sliceEnd);
+  const hasNext = isSizedForAll
+    ? tmdbPage < rawRes.total_pages || sliceEnd < mapped.length
+    : tmdbPage < rawRes.total_pages;
 
   return {
-    items: combined,
+    items,
     page,
-    totalPages: Math.max(1, totalPages),
-    totalResults,
-    partialNotice: hasPartialFailure
-      ? "Some results couldn't be loaded right now. Showing available titles."
-      : undefined,
+    totalPages: isSizedForAll
+      ? hasNext ? page + 1 : page
+      : Math.min(500, rawRes.total_pages),
+    totalResults: rawRes.total_results,
+    hasNext,
   };
 }

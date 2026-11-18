@@ -85,7 +85,7 @@ export default function DiscoverCard({
             </h2>
           </Link>
           <p className="mt-0.5 text-[11px] sm:text-xs text-subtle-foreground truncate">
-            {item.studio} &bull; {item.format}
+            {item.studio ? `${item.studio} \u2022 ${item.format}` : item.format}
           </p>
 
           {/* Genre Chips */}

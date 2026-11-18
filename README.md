@@ -36,8 +36,8 @@ Tracking apps usually cover one medium. StoriList keeps anime, comics, movies, s
 - **Unified library:** five media categories, four statuses (Planned, In Progress, Completed, Dropped), progress steppers, 1-10 ratings and notes.
 - **Accounts:** email and password sign-up with unique usernames, password reset, protected routes and cookie-based sessions.
 - **Database-backed:** library data lives in PostgreSQL with Row-Level Security. The UI updates optimistically and rolls back with a message if a save fails.
-- **Discover:** search and filter by category, format and genre. Filters live in the URL, so views can be bookmarked and shared.
-- **Live TMDB titles:** any TMDB movie or series opens as a full title page and can be tracked. The server saves a title to the catalogue only when a user tracks it.
+- **Discover:** search and filter across All formats, Anime, Comics, Movies, and Series by format and genre. Live data from TMDB and MyAnimeList. Filters live in the URL, so views can be bookmarked and shared.
+- **Live titles & tracking:** any TMDB or MyAnimeList title opens as a full title page and can be tracked. The server saves a title to the catalogue only when a user tracks it.
 - **Title pages:** server-rendered with per-title metadata, related titles, loading skeletons and proper 404 and error pages.
 - **Polish:** responsive layout, light and dark themes, accessible dialogs and menus, and a social share preview image.
 
@@ -118,7 +118,7 @@ Deploy on [Vercel](https://vercel.com/) and add the same environment variables, 
 - [x] Database-backed library with Row-Level Security and server-side validation
 - [x] TMDB title pages and tracking (movies and series)
 - [x] Discover powered by live TMDB data (popular titles and search)
-- [ ] MyAnimeList integration (anime, manga and manhwa)
+- [x] MyAnimeList integration (anime, manga and manhwa)
 - [ ] Open Library integration (novels)
 - [ ] Stats and activity timeline
 

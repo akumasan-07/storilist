@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Star, ArrowRight } from "lucide-react";
 import Container from "@/components/Container";
-import { fetchHomeFeaturedTitles } from "@/lib/providers/tmdb";
+import { fetchHomeFeaturedTitles } from "@/lib/providers";
 import { getCategoryMeta, formatYear } from "@/lib/media";
 
 export default async function HomeFeatured() {
@@ -104,7 +104,7 @@ export default async function HomeFeatured() {
                       </h3>
                     </Link>
                     <p className="mt-0.5 text-xs text-subtle-foreground truncate">
-                      {item.studio} &bull; {item.format}
+                      {item.studio ? `${item.studio} \u2022 ${item.format}` : item.format}
                     </p>
                     <p className="mt-1.5 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
                       {item.synopsis}

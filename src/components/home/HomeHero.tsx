@@ -3,11 +3,11 @@ import { Search, Compass, Library, ArrowRight } from "lucide-react";
 import Container from "@/components/Container";
 
 const POPULAR_SEARCHES = [
+  { label: "Frieren", q: "Frieren" },
   { label: "Inception", q: "Inception" },
-  { label: "Dune", q: "Dune" },
+  { label: "Death Note", q: "Death Note" },
   { label: "Breaking Bad", q: "Breaking Bad" },
-  { label: "Severance", q: "Severance" },
-  { label: "Interstellar", q: "Interstellar" },
+  { label: "Dune", q: "Dune" },
 ];
 
 export default function HomeHero() {

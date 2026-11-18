@@ -3,7 +3,11 @@
 import { useState, useEffect, useTransition, useCallback } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import DiscoverFilters from "./DiscoverFilters";
-import type { DiscoverSortOption } from "@/lib/discover";
+import {
+  isSortAllowedForCategory,
+  isGenreAllowedForCategory,
+  type DiscoverSortOption,
+} from "@/lib/discover";
 
 interface DiscoverFilterBarProps {
   initialQuery?: string;
@@ -56,13 +60,15 @@ export default function DiscoverFilterBar({
     [searchParams, pathname, router]
   );
 
-  // Debounce search query sync to URL
+  // Debounce search query sync to URL (minimum 3 characters required).
+  // Clearing or deleting back below 3 chars removes q from the URL.
   useEffect(() => {
     const handler = setTimeout(() => {
       const trimmed = searchQuery.trim();
       const currentQ = searchParams.get("q") || "";
-      if (trimmed !== currentQ) {
-        updateParam("q", trimmed, "");
+      const effectiveQ = trimmed.length >= 3 ? trimmed : "";
+      if (effectiveQ !== currentQ) {
+        updateParam("q", effectiveQ, "");
       }
     }, 300);
 
@@ -70,11 +76,41 @@ export default function DiscoverFilterBar({
   }, [searchQuery, searchParams, updateParam]);
 
   const selectedCategory = searchParams.get("category") || initialCategory;
-  const selectedGenre = searchParams.get("genre") || initialGenre;
-  const sortBy = (searchParams.get("sort") as DiscoverSortOption) || initialSort;
+  const rawGenre = searchParams.get("genre") || initialGenre;
+  const selectedGenre = isGenreAllowedForCategory(selectedCategory, rawGenre)
+    ? rawGenre
+    : "All Genres";
+
+  const rawSort = (searchParams.get("sort") as DiscoverSortOption) || initialSort;
+  const sortBy: DiscoverSortOption = isSortAllowedForCategory(selectedCategory, rawSort)
+    ? rawSort
+    : "popular";
 
   const handleSelectCategory = (cat: string) => {
-    updateParam("category", cat, "all");
+    startTransition(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (cat && cat !== "all") {
+        params.set("category", cat);
+      } else {
+        params.delete("category");
+      }
+
+      // When the category changes and the current sort isn't available, reset to Popular
+      const currentSort = params.get("sort");
+      if (currentSort && !isSortAllowedForCategory(cat, currentSort)) {
+        params.delete("sort");
+      }
+
+      // When the category changes and the current genre isn't available, reset to All Genres
+      const currentGenre = params.get("genre");
+      if (currentGenre && !isGenreAllowedForCategory(cat, currentGenre)) {
+        params.delete("genre");
+      }
+
+      params.delete("page");
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    });
   };
 
   const handleSelectGenre = (genre: string) => {

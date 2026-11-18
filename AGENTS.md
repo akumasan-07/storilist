@@ -22,7 +22,7 @@ StoriList is a unified personal media-tracking app (Anime, Comics, Movies, Serie
 
 **Stack (locked):** Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, lucide-react, ESLint.
 **Approved additions:** Supabase (PostgreSQL, Auth, RLS) via `@supabase/supabase-js` and `@supabase/ssr`; Zod for server-side validation.
-**Planned, not yet approved:** AniList, TMDB and Open Library/Google Books as catalogue sources. Confirm with me before implementing each.
+**Catalogue sources:** TMDB and MyAnimeList are approved and in use; Open Library is approved for novels (not built yet); AniList is ruled out (its terms ban competing tracker apps).
 
 Do not change, replace or add to the stack (languages, frameworks, libraries, databases, hosting, external services) unless absolutely necessary. If it is necessary, say so clearly, explain why, name exactly what would change, and wait for my approval.
 
@@ -72,6 +72,7 @@ Do not change, replace or add to the stack (languages, frameworks, libraries, da
 - Schema changes are new numbered files in `supabase/migrations/`. Never edit an applied migration.
 - Avoid Supabase-only extras (Realtime, Storage, Edge Functions) unless a feature genuinely needs them, to keep a future database switch cheap.
 - Provider API keys and the Supabase service-role key are server-only. The client never sends catalogue metadata, only IDs; the server fetches the data from the provider and writes it. Follow each provider's attribution and caching terms (see the About page).
+- MAL content stays family-friendly (drop anything whose nsfw isn't "white") and MAL text is stored exactly as provided.
 
 ---
 
